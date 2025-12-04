@@ -2,16 +2,21 @@ use axum::{
     body::Body,
     http::{Request, StatusCode, header},
 };
-use tower::ServiceExt;
-use sensei_server::{app, AppState};
 use sensei_server::llm::LlmClient;
-use serde_json::{json, Value};
+use sensei_server::memory::MemoryStore;
+use sensei_server::{AppState, app};
+use serde_json::{Value, json};
 use std::sync::Arc;
+use tower::ServiceExt;
 
 #[tokio::test]
 async fn ask_endpoint_returns_response() {
+    let memory = MemoryStore::new("sqlite::memory:").await.unwrap();
+    memory.migrate().await.unwrap();
+
     let state = AppState {
-        llm: Arc::new(LlmClient::new("dummy".to_string()))
+        llm: Arc::new(LlmClient::new("dummy".to_string())),
+        memory,
     };
     let app = app(state);
 
@@ -30,14 +35,10 @@ async fn ask_endpoint_returns_response() {
 
     assert_eq!(response.status(), StatusCode::OK);
 
-    let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let body: Value = serde_json::from_slice(&body_bytes).unwrap();
 
-    // With a dummy key, genai/Gemini will return an error or fail.
-    // Our handler catches errors and returns "Error: ...".
-    // So content should exist.
     assert!(body.get("content").is_some());
-
-    let content = body["content"].as_str().unwrap();
-    println!("Response: {}", content);
 }

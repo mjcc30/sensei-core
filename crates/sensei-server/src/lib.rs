@@ -1,18 +1,20 @@
 pub mod llm;
+pub mod memory;
 
+use crate::llm::LlmClient;
+use crate::memory::MemoryStore;
 use axum::{
+    Json, Router,
     extract::State,
     routing::{get, post},
-    Router,
-    Json,
 };
+use sensei_common::{AskRequest, AskResponse, Health};
 use std::sync::Arc;
-use crate::llm::LlmClient;
-use sensei_common::{Health, AskRequest, AskResponse};
 
 #[derive(Clone)]
 pub struct AppState {
     pub llm: Arc<LlmClient>,
+    pub memory: MemoryStore,
 }
 
 pub fn app(state: AppState) -> Router {
@@ -30,8 +32,14 @@ async fn health_check() -> Json<Health> {
 
 async fn ask_handler(
     State(state): State<AppState>,
-    Json(payload): Json<AskRequest>
+    Json(payload): Json<AskRequest>,
 ) -> Json<AskResponse> {
+    // 1. Create session or use existing (TODO: accept session_id in request)
+    // For now, create a new one for every request (or just log it)
+
+    // Example: Log prompt to DB
+    // let _ = state.memory.create_session(Some(&payload.prompt[..10])).await;
+
     let content = match state.llm.generate(&payload.prompt).await {
         Ok(text) => text,
         Err(e) => {
@@ -40,7 +48,5 @@ async fn ask_handler(
         }
     };
 
-    Json(AskResponse {
-        content,
-    })
+    Json(AskResponse { content })
 }

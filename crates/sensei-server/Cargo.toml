@@ -6,11 +6,16 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.100"
 axum = "0.8.7"
+chrono = { version = "0.4.42", features = ["serde"] }
 dotenvy = "0.15.7"
 genai = "0.4.4"
+libsqlite3-sys = "0.30.1"
 sensei-common = { version = "0.1.0", path = "../sensei-common" }
 serde = { version = "1.0.228", features = ["derive"] }
+sqlite-vec = "0.1.6"
+sqlx = { version = "0.8.6", features = ["runtime-tokio-native-tls", "sqlite", "macros", "migrate", "chrono"] }
 tokio = { version = "1.48.0", features = ["full"] }
+uuid = { version = "1.19.0", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
 
 [dev-dependencies]
 http-body-util = "0.1.3"

@@ -28,11 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     println!("Sending request to {}...", url);
 
-    let response = client
-        .post(&url)
-        .json(&request)
-        .send()
-        .await?;
+    let response = client.post(&url).json(&request).send().await?;
 
     if !response.status().is_success() {
         eprintln!("❌ Server Error: {}", response.status());
