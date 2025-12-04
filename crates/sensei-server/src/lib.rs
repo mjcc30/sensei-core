@@ -1,5 +1,6 @@
 pub mod llm;
 pub mod memory;
+pub mod agents;
 
 use axum::{
     extract::State,
@@ -10,13 +11,13 @@ use axum::{
     Json,
 };
 use std::sync::Arc;
-use crate::llm::LlmClient;
+use crate::llm::Llm;
 use crate::memory::MemoryStore;
 use sensei_common::{Health, AskRequest, AskResponse};
 
 #[derive(Clone)]
 pub struct AppState {
-    pub llm: Arc<LlmClient>,
+    pub llm: Arc<dyn Llm>,
     pub memory: MemoryStore,
 }
 

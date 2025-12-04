@@ -1,6 +1,12 @@
 use anyhow::{Context, Result};
 use genai::Client;
 use genai::chat::{ChatMessage, ChatRequest};
+use async_trait::async_trait;
+
+#[async_trait]
+pub trait Llm: Send + Sync {
+    async fn generate(&self, prompt: &str) -> Result<String>;
+}
 
 pub struct LlmClient {
     client: Client,
@@ -18,8 +24,11 @@ impl LlmClient {
             model: "gemini-2.5-flash".to_string(),
         }
     }
+}
 
-    pub async fn generate(&self, prompt: &str) -> Result<String> {
+#[async_trait]
+impl Llm for LlmClient {
+    async fn generate(&self, prompt: &str) -> Result<String> {
         let chat_req = ChatRequest::new(vec![ChatMessage::user(prompt)]);
 
         let response = self
@@ -28,8 +37,6 @@ impl LlmClient {
             .await
             .context("Failed to execute chat via genai")?;
 
-        // Using .content_text_as_str() despite deprecation warning for now (or update to .first_text())
-        // To be clean:
         #[allow(deprecated)]
         Ok(response
             .content_text_as_str()

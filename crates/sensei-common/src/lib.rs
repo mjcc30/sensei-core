@@ -28,12 +28,28 @@ pub struct Health {
 /// assert_eq!(req.prompt, "Hello");
 /// ```
 #[derive(Serialize, Deserialize, Debug)]
-pub struct  AskRequest  {
-    pub prompt :String,
+pub struct AskRequest {
+    pub prompt: String,
 }
 
 /// Represents the AI's response.
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AskResponse {
     pub content: String,
+}
+
+/// Categories for routing user queries to specialized agents.
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
+pub enum AgentCategory {
+    Red,
+    Blue,
+    Osint,
+    Cloud,
+    Crypto,
+    System,
+    Action,
+    Casual,
+    Novice,
+    #[serde(other)]
+    Unknown,
 }

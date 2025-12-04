@@ -46,14 +46,15 @@ jobs:
           # Export env var for next steps (using GITHUB_ENV)
           echo "DATABASE_URL=sqlite://$(pwd)/sensei_dev.db" >> $GITHUB_ENV
 
-            # 3. Security Audit (Dependencies)
-            - name: 🔒 Install Cargo Audit
-              run: cargo install cargo-audit || true
+      # 3. Security Audit (Dependencies)
+      - name: 🔒 Install Cargo Audit
+        run: cargo install cargo-audit || true
 
-            - name: 🕵️ Run Security Audit
-              run: cargo audit --ignore RUSTSEC-2023-0071
+      - name: 🕵️ Run Security Audit
+        run: cargo audit --ignore RUSTSEC-2023-0071
 
-            # 4. Formatting Check      - name: 🎨 Check Formatting
+      # 4. Formatting Check
+      - name: 🎨 Check Formatting
         run: cargo fmt --all -- --check
 
       # 5. Linting (Clippy)
