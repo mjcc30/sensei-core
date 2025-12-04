@@ -13,7 +13,7 @@
 - [x] **LLM Integration:** Move `genai` logic to `sensei-server`.
 - [x] **Memory Layer:** Implement SQLite connection using `sqlx` in `sensei-server`.
 - [x] **TDD:** Test conversation/session persistence (CRUD).
-- [ ] **Vector Support:** Integrate `sqlite-vec` for RAG.
+- [x] **Vector Support:** Integrate `sqlite-vec` for RAG.
 
 ## 🐝 Phase 3: The Swarm (Actors)
 - [ ] **Agent Trait:** Define the behavior of an Agent in Rust.

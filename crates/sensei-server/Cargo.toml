@@ -13,8 +13,7 @@ libsqlite3-sys = "0.30.1"
 sensei-common = { path = "../sensei-common" }
 serde = { version = "1.0.228", features = ["derive"] }
 sqlite-vec = "0.1.6"
-# Disable default features to avoid pulling in mysql/postgres and vulnerable rsa crate
-sqlx = { version = "0.8.6", default-features = false, features = ["runtime-tokio-native-tls", "sqlite", "macros", "migrate", "chrono"] }
+sqlx = { version = "0.8.6", default-features = false, features = ["runtime-tokio-native-tls", "sqlite", "chrono", "macros", "migrate"] }
 tokio = { version = "1.48.0", features = ["full"] }
 uuid = { version = "1.19.0", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
 
