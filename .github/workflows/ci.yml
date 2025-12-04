@@ -1,0 +1,80 @@
+name: Sensei Core CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  # Fail fast on clippy warnings
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  test-and-audit:
+    name: 🛡️ Test, Lint & Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Setup Cache (Speed up builds)
+      - name: ⚡ Cache Cargo
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      # 2. Install Rust
+      - name: 🦀 Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      # 3. Security Audit (Dependencies)
+      - name: 🔒 Install Cargo Audit
+        run: cargo install cargo-audit || true
+      
+      - name: 🕵️ Run Security Audit
+        run: cargo audit
+
+      # 4. Formatting Check
+      - name: 🎨 Check Formatting
+        run: cargo fmt --all -- --check
+
+      # 5. Linting (Clippy)
+      - name: 🧹 Run Clippy (Linter)
+        run: cargo clippy --workspace --all-targets --all-features
+
+      # 6. Unit & Integration Tests
+      - name: 🧪 Run Tests
+        run: cargo test --workspace --verbose
+        env:
+          GEMINI_API_KEY: "dummy_ci_key" # Needed for unit tests instantiation
+
+  coverage:
+    name: 📊 Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 🦀 Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: 📥 Install Tarpaulin
+        run: cargo install cargo-tarpaulin || true
+
+      - name: 📈 Generate Coverage Report
+        run: cargo tarpaulin --workspace --timeout 120 --out Xml
+        env:
+          GEMINI_API_KEY: "dummy_ci_key"
+
+      - name: 📤 Upload to Codecov (Optional)
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./cobertura.xml
+          fail_ci_if_error: false

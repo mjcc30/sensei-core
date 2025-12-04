@@ -6,28 +6,13 @@ use axum::{
     Router,
     Json,
 };
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use crate::llm::LlmClient;
+use sensei_common::{Health, AskRequest, AskResponse};
 
 #[derive(Clone)]
 pub struct AppState {
     pub llm: Arc<LlmClient>,
-}
-
-#[derive(Serialize)]
-pub struct Health {
-    status: String,
-}
-
-#[derive(Deserialize)]
-pub struct AskRequest {
-    prompt: String,
-}
-
-#[derive(Serialize)]
-pub struct AskResponse {
-    content: String,
 }
 
 pub fn app(state: AppState) -> Router {

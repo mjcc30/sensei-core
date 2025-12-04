@@ -1,0 +1,38 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: fmt
+        name: 🦀 Rust Fmt
+        description: Format Rust code
+        entry: cargo fmt --all -- --check
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: clippy
+        name: 🧹 Rust Clippy
+        description: Lint Rust code
+        entry: cargo clippy --workspace --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: test
+        name: 🧪 Rust Test
+        description: Run unit tests
+        entry: cargo test --workspace
+        language: system
+        types: [rust]
+        pass_filenames: false
+        # Need dummy env for tests
+        verbose: true
