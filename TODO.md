@@ -3,17 +3,17 @@
 > **Philosophy:** TDD First. Reliability. Performance.
 
 ## 🏗️ Phase 1: Foundation (Workspace & Architecture)
-- [ ] **Setup Workspace:** Convert project to Rust Workspace (`server`, `client`, `common`).
-- [ ] **Shared Types:** Define `Message`, `Query`, `Response` in `sensei-common`.
-- [ ] **Server Skeleton:** Implement a basic `Axum` HTTP server in `sensei-server`.
-- [ ] **Client Skeleton:** Implement a basic `Clap` CLI in `sensei-client` that queries the server.
-- [ ] **TDD:** Test Health Check endpoint.
+- [x] **Setup Workspace:** Convert project to Rust Workspace (`server`, `client`, `common`).
+- [x] **Shared Types:** Define `Message`, `Query`, `Response` in `sensei-common`.
+- [x] **Server Skeleton:** Implement a basic `Axum` HTTP server in `sensei-server`.
+- [x] **Client Skeleton:** Implement a basic `Clap` CLI in `sensei-client` that queries the server.
+- [x] **TDD:** Test Health Check endpoint.
 
 ## 🧠 Phase 2: The Brain (LLM & Memory)
-- [ ] **LLM Integration:** Move `genai` logic to `sensei-server`.
-- [ ] **Memory Layer:** Implement SQLite connection using `sqlx` or `rusqlite` in `sensei-server`.
+- [x] **LLM Integration:** Move `genai` logic to `sensei-server`.
+- [x] **Memory Layer:** Implement SQLite connection using `sqlx` in `sensei-server`.
+- [x] **TDD:** Test conversation/session persistence (CRUD).
 - [ ] **Vector Support:** Integrate `sqlite-vec` for RAG.
-- [ ] **TDD:** Test conversation persistence.
 
 ## 🐝 Phase 3: The Swarm (Actors)
 - [ ] **Agent Trait:** Define the behavior of an Agent in Rust.
@@ -26,5 +26,6 @@
 - [ ] **TUI (Optional):** Create a rich terminal UI with `ratatui` for the client.
 
 ## 🛡️ Quality Assurance
-- [ ] **CI/CD:** Rust Clippy & Cargo Test workflows.
+- [x] **CI/CD:** Rust Clippy, Rustfmt (prek) & Cargo Test workflows.
+- [x] **Documentation:** READMEs and Doc-tests for `sensei-common`.
 - [ ] **Benchmarks:** Compare v2 vs v3 latency.
