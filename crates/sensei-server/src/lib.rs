@@ -1,15 +1,18 @@
 pub mod llm;
 pub mod memory;
 
+use axum::{
+    extract::State,
+    http::HeaderMap,
+    response::IntoResponse,
+    routing::{get, post},
+    Router,
+    Json,
+};
+use std::sync::Arc;
 use crate::llm::LlmClient;
 use crate::memory::MemoryStore;
-use axum::{
-    Json, Router,
-    extract::State,
-    routing::{get, post},
-};
-use sensei_common::{AskRequest, AskResponse, Health};
-use std::sync::Arc;
+use sensei_common::{Health, AskRequest, AskResponse};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -32,14 +35,34 @@ async fn health_check() -> Json<Health> {
 
 async fn ask_handler(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Json(payload): Json<AskRequest>,
-) -> Json<AskResponse> {
-    // 1. Create session or use existing (TODO: accept session_id in request)
-    // For now, create a new one for every request (or just log it)
+) -> impl IntoResponse {
+    // 1. Resolve Session ID
+    let session_id = if let Some(header_val) = headers.get("x-session-id") {
+        // Check if session exists ? Ideally yes. If not found, create new ?
+        // For simple robustnes: use it. If add_message fails due to FK, handle it.
+        // Assuming client sends valid ID if it sends one.
+        header_val.to_str().unwrap_or("").to_string()
+    } else {
+        // Create new session
+        state.memory.create_session(None).await.unwrap_or_default()
+    };
 
-    // Example: Log prompt to DB
-    // let _ = state.memory.create_session(Some(&payload.prompt[..10])).await;
+    if session_id.is_empty() {
+         return (
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Json(AskResponse { content: "Failed to init session".to_string() })
+        ).into_response();
+    }
 
+    // 2. Persist User Message
+    if let Err(e) = state.memory.add_message(&session_id, "user", &payload.prompt).await {
+        eprintln!("DB Error (User Msg): {}", e);
+        // Maybe session ID was invalid? Recovery logic could be here.
+    }
+
+    // 3. Generate (TODO: Inject history)
     let content = match state.llm.generate(&payload.prompt).await {
         Ok(text) => text,
         Err(e) => {
@@ -48,5 +71,18 @@ async fn ask_handler(
         }
     };
 
-    Json(AskResponse { content })
+    // 4. Persist AI Message
+    if let Err(e) = state.memory.add_message(&session_id, "assistant", &content).await {
+        eprintln!("DB Error (AI Msg): {}", e);
+    }
+
+    // 5. Build Response with Header
+    let mut response = Json(AskResponse { content }).into_response();
+
+    // x-session-id is typically ASCII/UUID, safe to unwrap
+    if let Ok(header_val) = axum::http::HeaderValue::from_str(&session_id) {
+        response.headers_mut().insert("x-session-id", header_val);
+    }
+
+    response
 }
