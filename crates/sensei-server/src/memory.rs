@@ -3,7 +3,7 @@ use chrono::NaiveDateTime;
 use libsqlite3_sys::sqlite3_auto_extension;
 use serde::{Deserialize, Serialize};
 use sqlite_vec::sqlite3_vec_init;
-use sqlx::{Row, sqlite::SqlitePool};
+use sqlx::sqlite::SqlitePool;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
