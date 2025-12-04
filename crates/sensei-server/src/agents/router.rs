@@ -1,7 +1,7 @@
-use std::sync::Arc;
 use crate::llm::Llm;
 use sensei_common::AgentCategory;
 use serde::Deserialize;
+use std::sync::Arc;
 
 #[derive(Deserialize)]
 struct RouterResponse {

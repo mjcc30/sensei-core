@@ -2,6 +2,7 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
+use sensei_server::agents::{Orchestrator, router::RouterAgent};
 use sensei_server::llm::LlmClient;
 use sensei_server::memory::MemoryStore;
 use sensei_server::{AppState, app};
@@ -11,10 +12,11 @@ use tower::ServiceExt;
 #[tokio::test]
 async fn health_check_works() {
     let memory = MemoryStore::new("sqlite::memory:").await.unwrap();
-    // No need to migrate for health check strictly, but good practice
+    let llm = Arc::new(LlmClient::new("dummy".to_string()));
 
     let state = AppState {
-        llm: Arc::new(LlmClient::new("dummy".to_string())),
+        orchestrator: Arc::new(Orchestrator::new()),
+        router: Arc::new(RouterAgent::new(llm)),
         memory,
     };
     let app = app(state);

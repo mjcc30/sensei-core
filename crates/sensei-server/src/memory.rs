@@ -1,10 +1,10 @@
-use sqlx::{sqlite::SqlitePool};
-use uuid::Uuid;
 use anyhow::Result;
-use serde::{Serialize, Deserialize};
 use chrono::NaiveDateTime;
-use sqlite_vec::sqlite3_vec_init;
 use libsqlite3_sys::sqlite3_auto_extension;
+use serde::{Deserialize, Serialize};
+use sqlite_vec::sqlite3_vec_init;
+use sqlx::sqlite::SqlitePool;
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Session {
@@ -57,12 +57,9 @@ impl MemoryStore {
 
     pub async fn create_session(&self, title: Option<&str>) -> Result<String> {
         let id = Uuid::new_v4().to_string();
-        sqlx::query!(
-            "INSERT INTO sessions (id, title) VALUES (?, ?)",
-            id, title
-        )
-        .execute(&self.pool)
-        .await?;
+        sqlx::query!("INSERT INTO sessions (id, title) VALUES (?, ?)", id, title)
+            .execute(&self.pool)
+            .await?;
         Ok(id)
     }
 
@@ -90,7 +87,8 @@ impl MemoryStore {
     pub async fn update_session_title(&self, id: &str, title: &str) -> Result<()> {
         sqlx::query!(
             "UPDATE sessions SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            title, id
+            title,
+            id
         )
         .execute(&self.pool)
         .await?;
@@ -98,12 +96,9 @@ impl MemoryStore {
     }
 
     pub async fn delete_session(&self, id: &str) -> Result<()> {
-        sqlx::query!(
-            "DELETE FROM sessions WHERE id = ?",
-            id
-        )
-        .execute(&self.pool)
-        .await?;
+        sqlx::query!("DELETE FROM sessions WHERE id = ?", id)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 
@@ -113,7 +108,10 @@ impl MemoryStore {
         let id = Uuid::new_v4().to_string();
         sqlx::query!(
             "INSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)",
-            id, session_id, role, content
+            id,
+            session_id,
+            role,
+            content
         )
         .execute(&self.pool)
         .await?;

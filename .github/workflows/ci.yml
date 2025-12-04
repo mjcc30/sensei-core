@@ -79,6 +79,16 @@ jobs:
       - name: 📥 Install Tarpaulin
         run: cargo install cargo-tarpaulin || true
 
+      # Setup Database for Coverage job too
+      - name: 🗄️ Setup SQLite DB
+        run: |
+          sudo apt-get update && sudo apt-get install -y sqlite3
+          # Create DB in server crate
+          cd crates/sensei-server
+          sqlite3 sensei_dev.db < migrations/20250101_init.sql
+          # Export env var for next steps (using GITHUB_ENV)
+          echo "DATABASE_URL=sqlite://$(pwd)/sensei_dev.db" >> $GITHUB_ENV
+
       - name: 📈 Generate Coverage Report
         run: cargo tarpaulin --workspace --timeout 120 --out Xml
         env:

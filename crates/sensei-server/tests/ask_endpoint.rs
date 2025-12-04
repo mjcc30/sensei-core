@@ -2,6 +2,7 @@ use axum::{
     body::Body,
     http::{Request, StatusCode, header},
 };
+use sensei_server::agents::{Orchestrator, router::RouterAgent};
 use sensei_server::llm::LlmClient;
 use sensei_server::memory::MemoryStore;
 use sensei_server::{AppState, app};
@@ -14,8 +15,13 @@ async fn ask_endpoint_returns_response() {
     let memory = MemoryStore::new("sqlite::memory:").await.unwrap();
     memory.migrate().await.unwrap();
 
+    let llm = Arc::new(LlmClient::new("dummy".to_string()));
+    let orchestrator = Arc::new(Orchestrator::new());
+    let router = Arc::new(RouterAgent::new(llm.clone()));
+
     let state = AppState {
-        llm: Arc::new(LlmClient::new("dummy".to_string())),
+        orchestrator,
+        router,
         memory,
     };
     let app = app(state);
@@ -40,5 +46,7 @@ async fn ask_endpoint_returns_response() {
         .unwrap();
     let body: Value = serde_json::from_slice(&body_bytes).unwrap();
 
+    // Response content might be "No agent found" because Orchestrator is empty
+    // But it proves the pipeline works.
     assert!(body.get("content").is_some());
 }

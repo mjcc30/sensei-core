@@ -16,10 +16,10 @@
 - [x] **Vector Support:** Integrate `sqlite-vec` for RAG.
 
 ## 🐝 Phase 3: The Swarm (Actors)
-- [ ] **Agent Trait:** Define the behavior of an Agent in Rust.
-- [ ] **Router:** Implement the intent classifier.
-- [ ] **Orchestrator:** Manage message passing between agents (Tokio Channels).
-- [ ] **Specialists:** Port Red/Blue/System agents.
+- [x] **Agent Trait:** Define the behavior of an Agent in Rust.
+- [x] **Router:** Implement the intent classifier (`RouterAgent` with LLM).
+- [x] **Orchestrator:** Manage message passing between agents.
+- [x] **Specialists:** Port Red/Blue/System agents (`SpecializedAgent`).
 
 ## 🔌 Phase 4: Interfaces & Tools
 - [ ] **MCP Server:** Expose tools via MCP protocol natively.

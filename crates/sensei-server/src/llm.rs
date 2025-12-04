@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
+use async_trait::async_trait;
 use genai::Client;
 use genai::chat::{ChatMessage, ChatRequest};
-use async_trait::async_trait;
 
 #[async_trait]
 pub trait Llm: Send + Sync {

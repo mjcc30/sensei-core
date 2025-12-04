@@ -1,7 +1,7 @@
+use async_trait::async_trait;
+use sensei_common::AgentCategory;
 use sensei_server::agents::router::RouterAgent;
 use sensei_server::llm::Llm;
-use sensei_common::AgentCategory;
-use async_trait::async_trait;
 use std::sync::Arc;
 
 struct MockLlm {

@@ -39,11 +39,13 @@ async fn rag_vector_search_works() {
     // Note: sqlite-vec syntax for KNN uses 'MATCH' and 'k = N' predicate
     let query_vec = f32_vec_to_bytes(&[0.9, 0.1]);
 
-    let row = sqlx::query("SELECT rowid, distance FROM vec_items WHERE embedding MATCH ? AND k = 1 ORDER BY distance")
-        .bind(query_vec)
-        .fetch_one(store.get_pool())
-        .await
-        .expect("Failed to search");
+    let row = sqlx::query(
+        "SELECT rowid, distance FROM vec_items WHERE embedding MATCH ? AND k = 1 ORDER BY distance",
+    )
+    .bind(query_vec)
+    .fetch_one(store.get_pool())
+    .await
+    .expect("Failed to search");
 
     let id: i64 = row.get("rowid");
     // let dist: f32 = row.get("distance");

@@ -1,4 +1,5 @@
 pub mod router;
+pub mod specialists;
 
 use async_trait::async_trait;
 use sensei_common::AgentCategory;

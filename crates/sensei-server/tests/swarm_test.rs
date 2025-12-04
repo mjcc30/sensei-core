@@ -1,6 +1,6 @@
-use sensei_server::agents::{Agent, Orchestrator};
-use sensei_common::AgentCategory;
 use async_trait::async_trait;
+use sensei_common::AgentCategory;
+use sensei_server::agents::{Agent, Orchestrator};
 
 struct MockRedAgent;
 
