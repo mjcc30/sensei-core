@@ -36,7 +36,7 @@ async fn ask_handler(
         Ok(text) => text,
         Err(e) => {
             eprintln!("LLM Error: {}", e);
-            format!("Error: Failed to generate response.")
+            "Error: Failed to generate response.".to_string()
         }
     };
 

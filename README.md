@@ -38,12 +38,12 @@ Sensei v3 follows a **Client-Server** architecture (Workspace):
 
 ## 🛡️ Development & Security
 
-We enforce strict quality standards using **Pre-commit** hooks and **GitHub Actions**.
+We enforce strict quality standards using **prek** (a fast, Rust-native `pre-commit` alternative) and **GitHub Actions**.
 
 ### 1. Install Dev Tools
 ```bash
-# Install pre-commit framework (Python required)
-pip install pre-commit
+# Install prek (Better pre-commit in Rust)
+cargo install prek
 
 # Install Rust tools
 cargo install cargo-audit
@@ -53,7 +53,7 @@ cargo install cargo-tarpaulin
 ### 2. Activate Hooks
 To prevent committing bad code, install the git hooks:
 ```bash
-pre-commit install
+prek install
 ```
 Now, every `git commit` will automatically run:
 *   `cargo fmt` (Formatting)
@@ -62,7 +62,7 @@ Now, every `git commit` will automatically run:
 
 ### 3. Run Checks Manually
 ```bash
-pre-commit run --all-files
+prek run --all-files
 ```
 
 ## 🗺️ Roadmap

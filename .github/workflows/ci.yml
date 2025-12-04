@@ -39,7 +39,7 @@ jobs:
       # 3. Security Audit (Dependencies)
       - name: 🔒 Install Cargo Audit
         run: cargo install cargo-audit || true
-      
+
       - name: 🕵️ Run Security Audit
         run: cargo audit
 

@@ -12,7 +12,7 @@ impl LlmClient {
         // For this phase, we rely on the environment variable GEMINI_API_KEY being set.
         // 'genai' picks it up automatically.
         let client = Client::default();
-            
+
         Self {
             client,
             model: "gemini-2.5-flash".to_string(),
@@ -32,6 +32,7 @@ impl LlmClient {
 
         // Using .content_text_as_str() despite deprecation warning for now (or update to .first_text())
         // To be clean:
+        #[allow(deprecated)]
         Ok(response.content_text_as_str().unwrap_or_default().to_string())
     }
 }

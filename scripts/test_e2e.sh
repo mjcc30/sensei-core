@@ -1,7 +1,7 @@
 #!/bin/bash
 source $HOME/.cargo/env
 
-# Note: This script relies on GEMINI_API_KEY being set in the environment 
+# Note: This script relies on GEMINI_API_KEY being set in the environment
 # OR in a .env file in the working directory.
 
 echo "🔨 Building Workspace..."
