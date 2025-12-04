@@ -28,8 +28,8 @@ pub struct Health {
 /// assert_eq!(req.prompt, "Hello");
 /// ```
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AskRequest {
-    pub prompt: String,
+pub struct  AskRequest  {
+    pub prompt :String,
 }
 
 /// Represents the AI's response.
