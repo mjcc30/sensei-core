@@ -2,3 +2,6 @@
 /.env
 **/*.rs.bk
 *.pdb
+*.db
+*.db-shm
+*.db-wal
