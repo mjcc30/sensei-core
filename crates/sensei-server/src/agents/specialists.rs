@@ -37,7 +37,7 @@ User Query: {}",
             Err(e) => {
                 eprintln!("Agent {:?} Error: {}", self.category, e);
                 "I encountered an error processing your request.".to_string()
-            },
+            }
         }
     }
 
