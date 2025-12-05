@@ -1,0 +1,18 @@
+[Unit]
+Description=Sensei Core AI Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/bin/sensei-server
+WorkingDirectory=/var/lib/sensei
+Restart=on-failure
+EnvironmentFile=/etc/sensei/env
+# Security Hardening
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

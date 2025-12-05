@@ -24,16 +24,17 @@ async fn main() -> anyhow::Result<()> {
         .try_init()?;
 
     // 1. Load Configuration (Prompts)
-    let prompts_path = "prompts.yaml";
-    let prompts_config = match load_prompts(prompts_path) {
+    let prompts_path =
+        env::var("SENSEI_PROMPTS_PATH").unwrap_or_else(|_| "prompts.yaml".to_string());
+    let prompts_config = match load_prompts(&prompts_path) {
         Ok(c) => {
             info!("✅ Loaded prompts from {}", prompts_path);
             Some(c)
         }
         Err(e) => {
             warn!(
-                "⚠️ Failed to load prompts.yaml: {}. Using default prompts.",
-                e
+                "⚠️ Failed to load prompts from '{}': {}. Using default prompts.",
+                prompts_path, e
             );
             None
         }
