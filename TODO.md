@@ -56,3 +56,6 @@ These features exist in Python v2 but are missing in Rust v3.
         - [ ] Switch transport to Unix Domain Sockets (UDS) with `chmod 700` to restrict access to the owner.
         - [ ] Implement `SO_PEERCRED` verification to block unauthorized local users/processes.
         - [ ] Add API Key/Token authentication for authorized remote clients.
+    - [ ] **Dynamic Swarm:** Allow defining new agents in `prompts.yaml` without recompiling.
+        - [ ] Replace `AgentCategory` enum with Strings.
+        - [ ] Auto-generate Router prompt based on registered agents.
