@@ -1,8 +1,8 @@
+use anyhow::Result;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use serde::Deserialize;
-use anyhow::Result;
 
 #[derive(Debug, Deserialize)]
 pub struct PromptsConfig {

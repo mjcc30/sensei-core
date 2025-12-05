@@ -1,7 +1,8 @@
 pub mod agents;
+pub mod config;
 pub mod llm;
 pub mod memory;
-pub mod config;
+pub mod tools;
 
 use crate::agents::Orchestrator;
 use crate::agents::router::RouterAgent;
@@ -68,11 +69,17 @@ async fn ask_handler(
     }
 
     // 3. Route Query
-    let category = state.router.classify(&payload.prompt).await;
-    println!("🧠 Routing query '{}' to {:?}", payload.prompt, category);
+    let decision = state.router.classify(&payload.prompt).await;
+    println!(
+        "🧠 Routing query '{}' to {:?} (Optimized: '{}')",
+        payload.prompt, decision.category, decision.query
+    );
 
-    // 4. Dispatch to Agent
-    let content = state.orchestrator.dispatch(category, &payload.prompt).await;
+    // 4. Dispatch to Agent using OPTIMIZED query
+    let content = state
+        .orchestrator
+        .dispatch(decision.category, &decision.query)
+        .await;
 
     // 5. Persist AI Message
     if let Err(e) = state

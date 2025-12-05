@@ -1,13 +1,13 @@
-use sensei_server::{app, AppState};
-use sensei_server::llm::LlmClient;
-use sensei_server::memory::MemoryStore;
+use dotenvy::dotenv;
+use sensei_common::AgentCategory;
 use sensei_server::agents::{Orchestrator, router::RouterAgent, specialists::SpecializedAgent};
 use sensei_server::config::load_prompts;
-use sensei_common::AgentCategory;
-use tokio::net::TcpListener;
-use std::sync::Arc;
-use dotenvy::dotenv;
+use sensei_server::llm::LlmClient;
+use sensei_server::memory::MemoryStore;
+use sensei_server::{AppState, app};
 use std::env;
+use std::sync::Arc;
+use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() {
@@ -21,9 +21,12 @@ async fn main() {
         Ok(c) => {
             println!("✅ Loaded prompts from {}", prompts_path);
             Some(c)
-        },
+        }
         Err(e) => {
-            eprintln!("⚠️ Failed to load prompts.yaml: {}. Using default prompts.", e);
+            eprintln!(
+                "⚠️ Failed to load prompts.yaml: {}. Using default prompts.",
+                e
+            );
             None
         }
     };
@@ -49,7 +52,9 @@ async fn main() {
     let db_url = env::var("DATABASE_URL").unwrap_or("sqlite://sensei.db?mode=rwc".to_string());
     println!("📦 Connecting to database: {}", db_url);
 
-    let memory = MemoryStore::new(&db_url).await.expect("Failed to connect to database");
+    let memory = MemoryStore::new(&db_url)
+        .await
+        .expect("Failed to connect to database");
     memory.migrate().await.expect("Failed to migrate database");
 
     // 4. Init Swarm
@@ -59,49 +64,58 @@ async fn main() {
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Red,
-        &get_prompt("red_team", "SYSTEM: You are a Red Team Operator. Provide offensive security insights.")
+        &get_prompt(
+            "red_team",
+            "SYSTEM: You are a Red Team Operator. Provide offensive security insights.",
+        ),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Blue,
-        &get_prompt("blue_team", "SYSTEM: You are a Blue Team Analyst. Provide defensive security insights.")
+        &get_prompt(
+            "blue_team",
+            "SYSTEM: You are a Blue Team Analyst. Provide defensive security insights.",
+        ),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Cloud,
-        &get_prompt("cloud", "SYSTEM: You are a Cloud Security Architect. Audit AWS/Azure/GCP configurations.")
+        &get_prompt(
+            "cloud",
+            "SYSTEM: You are a Cloud Security Architect. Audit AWS/Azure/GCP configurations.",
+        ),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Crypto,
-        &get_prompt("crypto", "SYSTEM: You are a Cryptographer.")
+        &get_prompt("crypto", "SYSTEM: You are a Cryptographer."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Osint,
-        &get_prompt("osint", "SYSTEM: You are an Intelligence Officer.")
+        &get_prompt("osint", "SYSTEM: You are an Intelligence Officer."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Casual,
-        &get_prompt("casual", "SYSTEM: You are Sensei, a helpful AI assistant.")
+        &get_prompt("casual", "SYSTEM: You are Sensei, a helpful AI assistant."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Novice,
-        &get_prompt("novice", "SYSTEM: You are a Teacher.")
+        &get_prompt("novice", "SYSTEM: You are a Teacher."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::System,
-        &get_prompt("system", "SYSTEM: You are Root.")
+        &get_prompt("system", "SYSTEM: You are Root."),
     )));
 
     // 5. Init Router
@@ -113,7 +127,7 @@ async fn main() {
     let state = AppState {
         orchestrator: Arc::new(orchestrator),
         router,
-        memory
+        memory,
     };
 
     // 7. Start Server
