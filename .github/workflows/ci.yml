@@ -37,10 +37,10 @@ jobs:
         with:
           components: clippy, rustfmt
 
-      # 2.5 Setup Database for SQLx (query_as!)
+      # Setup Database for sqlx macros
       - name: 🗄️ Setup SQLite DB
         run: |
-          sudo apt-get update && sudo apt-get install -y sqlite3
+          sudo apt-get update && sudo apt-get install -y sqlite3 nmap
           # Create DB in server crate
           cd crates/sensei-server
           sqlite3 sensei_dev.db < migrations/20250101_init.sql
@@ -82,7 +82,7 @@ jobs:
       # Setup Database for Coverage job too
       - name: 🗄️ Setup SQLite DB
         run: |
-          sudo apt-get update && sudo apt-get install -y sqlite3
+          sudo apt-get update && sudo apt-get install -y sqlite3 nmap
           # Create DB in server crate
           cd crates/sensei-server
           sqlite3 sensei_dev.db < migrations/20250101_init.sql
