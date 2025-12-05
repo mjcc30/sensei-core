@@ -1,21 +1,23 @@
 # 🦀 Sensei Core (v3)
 
-**Sensei Core** is the next-generation, high-performance rewrite of the Sensei AI Mentor. Built with **Rust**, it aims to replace the v2 Python engine with a faster, safer, and more scalable distributed architecture.
+**Sensei Core** is a high-performance, distributed AI Agent Swarm written in Rust. It replaces the legacy Python engine with a memory-safe, concurrent architecture capable of RAG, Tool Execution, and Multi-Model Reasoning.
 
-## 🏛️ Architecture
+## ✨ Features
 
-Sensei v3 follows a **Client-Server** architecture (Workspace):
+*   **🐝 Agent Swarm:** Specialized agents (Red Team, Blue Team, Cloud, Crypto) orchestrated by a Router.
+*   **🧠 Smart Routing:** Automatically routes queries to the best agent (and model tier) based on intent.
+*   **⚡ Multi-Model:** Uses **Gemini 2.5 Flash** for fast tasks and **Gemini 3 Pro (Preview)** for deep reasoning.
+*   **📚 RAG (Retrieval Augmented Generation):** Ingest documents (`sqlite-vec`) and automatically retrieve context during conversation.
+*   **🛠️ Tool Execution:** Agents can run system commands (`nmap`, `uptime`, `df`) securely via an allowlist.
+*   **💾 Persistence:** SQLite storage for chat sessions and vector embeddings (3072 dims).
 
-*   **🧠 Server (`crates/sensei-server`)**: A background daemon powered by `Axum` and `Tokio`. It manages the LLM connections (Gemini), persistence (SQLite), and Agent Swarm logic.
-*   **🗣️ Client (`crates/sensei-client`)**: A lightweight CLI powered by `Clap`. It sends requests to the server and streams responses.
-*   **📦 Common (`crates/sensei-common`)**: Shared types and logic protocol.
-
-## 🚀 Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
-*   Rust 1.91.1 (Stable) or later & Cargo
-*   Git
-*   A Gemini API Key
+*   Rust 1.91.1+
+*   `sqlite3` & `libsqlite3-dev`
+*   `nmap` (optional, for Action Agent)
+*   A Google Gemini API Key
 
 ### Installation
 
@@ -26,9 +28,10 @@ Sensei v3 follows a **Client-Server** architecture (Workspace):
     ```
 
 2.  **Configure Environment:**
-    Create a `.env` file in the root or `crates/sensei-server/`:
+    Create a `.env` file:
     ```env
     GEMINI_API_KEY=your_api_key_here
+    DATABASE_URL=sqlite://sensei.db?mode=rwc
     ```
 
 3.  **Build:**
@@ -36,42 +39,68 @@ Sensei v3 follows a **Client-Server** architecture (Workspace):
     cargo build --release
     ```
 
-## 🛡️ Development & Security
+## 🎮 Usage
 
-We enforce strict quality standards using **prek** (a fast, Rust-native `pre-commit` alternative) and **GitHub Actions**.
-
-### 1. Install Dev Tools
+### 1. Start the Server
+The server acts as the central brain (Daemon).
 ```bash
-# Install prek (Better pre-commit in Rust)
-cargo install prek
-
-# Install Rust tools
-cargo install cargo-audit
-cargo install cargo-tarpaulin
+./target/release/sensei-server
 ```
 
-### 2. Activate Hooks
-To prevent committing bad code, install the git hooks:
+### 2. Ask Questions (CLI)
+Use the lightweight client to interact.
 ```bash
-prek install
-```
-Now, every `git commit` will automatically run:
-*   `cargo fmt` (Formatting)
-*   `cargo clippy` (Linting - Errors on warnings)
-*   `cargo test` (Unit tests)
+# Standard query
+./target/release/sensei-client ask "How to secure a Docker container?"
 
-### 3. Run Checks Manually
+# Direct mode (shortcut)
+./target/release/sensei-client "Explain buffer overflow"
+
+# "God Mode" (Red Team Raw)
+# Requires 'red_team' classification and '--raw' flag
+./target/release/sensei-client ask "Write a C exploit for CVE-2024-XXXX --raw"
+```
+
+### 3. Ingest Knowledge (RAG)
+Feed the brain with text files.
 ```bash
-prek run --all-files
+echo "The production database password is 'hunter2'" > secrets.txt
+./target/release/sensei-client add secrets.txt
+
+# Verify retrieval
+./target/release/sensei-client ask "What is the db password?"
+```
+
+## 🏗️ Architecture
+
+*   **Server (`crates/sensei-server`):** Axum-based REST API. Manages lifecycle, DB connection pool, and LLM clients.
+*   **Agents:**
+    *   `RouterAgent`: Classifies intent (Red, Blue, System...) and optimizes queries.
+    *   `SpecializedAgent`: Expert persona (prompt-engineered) utilizing Smart LLM.
+    *   `ToolExecutorAgent`: Agent capable of calling `Tool` traits (Nmap, System).
+*   **Memory:** SQLite with `sqlite-vec` extension for vector similarity search.
+
+## 🧪 Testing & Quality
+
+We enforce strict quality standards.
+
+```bash
+# Run Unit & Integration Tests
+cargo test --workspace
+
+# Run E2E Benchmarks (requires python3)
+python3 scripts/benchmark.py      # Performance (v2 vs v3)
+python3 scripts/test_rag.py       # RAG Capability
+python3 scripts/validate_quality.py # Response Quality
 ```
 
 ## 🗺️ Roadmap
 
-*   [x] **Phase 1:** Skeleton, Client-Server HTTP, GenAI Integration.
-*   [ ] **Phase 2:** Persistence (SQLite), RAG (Vector DB).
-*   [ ] **Phase 3:** Agent Swarm (Router, Red/Blue/System Agents).
-*   [ ] **Phase 4:** MCP Protocol Implementation.
+See [TODO.md](./TODO.md) for detailed progress.
+- [x] Core V3 (Swarm, RAG, Tools)
+- [ ] Phase 4: MCP Protocol Implementation
+- [ ] Phase 4: TUI (Terminal UI)
+- [ ] Phase 5: Security Model (MAC/ABAC)
 
 ## 📄 License
-
 MIT
