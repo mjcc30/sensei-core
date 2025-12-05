@@ -19,6 +19,15 @@ jobs:
       - name: 📦 Install Dependencies
         run: sudo apt-get update && sudo apt-get install -y sqlite3 libsqlite3-dev nmap
 
+      # Setup Database for sqlx macros
+      - name: 🗄️ Setup SQLite DB
+        run: |
+          cd crates/sensei-server
+          sqlite3 sensei_dev.db < migrations/20250101_init.sql
+          # Ignore error for vec0 extension if not present in sqlite3 CLI
+          sqlite3 sensei_dev.db < migrations/20250102_vectors.sql || true
+          echo "DATABASE_URL=sqlite://$(pwd)/sensei_dev.db?mode=rwc" >> $GITHUB_ENV
+
       - name: 🔨 Build Release
         run: cargo build --release --verbose
 
@@ -33,8 +42,8 @@ jobs:
           cp target/release/sensei-client $DIR/
 
           # Config & Dist
-          cp prompts.yaml $DIR/
-          cp prompts.example.yaml $DIR/
+          # Rename example to default config for distribution
+          cp prompts.example.yaml $DIR/prompts.yaml
           cp .env.example $DIR/
           cp -r dist $DIR/
           cp README.md $DIR/
