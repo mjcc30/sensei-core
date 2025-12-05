@@ -1,8 +1,8 @@
+use crate::tools::Tool;
 use anyhow::{Result, bail};
 use async_trait::async_trait;
-use crate::tools::Tool;
-use std::process::Command;
 use std::env;
+use std::process::Command;
 
 pub struct NmapTool;
 
@@ -24,7 +24,9 @@ impl Tool for NmapTool {
             || target.contains('(')
             || target.contains(')')
         {
-            bail!("Invalid characters in target name. Please provide a valid hostname or IP address.");
+            bail!(
+                "Invalid characters in target name. Please provide a valid hostname or IP address."
+            );
         }
 
         // Check if nmap is available in PATH or use provided path

@@ -13,7 +13,7 @@ Sensei v3 follows a **Client-Server** architecture (Workspace):
 ## 🚀 Quick Start
 
 ### Prerequisites
-*   Rust (latest stable) & Cargo
+*   Rust 1.91.1 (Stable) or later & Cargo
 *   Git
 *   A Gemini API Key
 

@@ -15,6 +15,7 @@ use axum::{
     routing::{get, post},
 };
 use sensei_common::{AskRequest, AskResponse, Health};
+use serde_json::{Value, json};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -28,6 +29,7 @@ pub fn app(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health_check))
         .route("/v1/ask", post(ask_handler))
+        .route("/v1/debug/classify", post(debug_classify_handler))
         .with_state(state)
 }
 
@@ -35,6 +37,18 @@ async fn health_check() -> Json<Health> {
     Json(Health {
         status: "ok".to_string(),
     })
+}
+
+async fn debug_classify_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<AskRequest>,
+) -> Json<Value> {
+    let decision = state.router.classify(&payload.prompt).await;
+
+    Json(json!({
+        "category": decision.category,
+        "enhanced_query": decision.query
+    }))
 }
 
 async fn ask_handler(

@@ -17,7 +17,7 @@ async fn ask_endpoint_returns_response() {
 
     let llm = Arc::new(LlmClient::new("dummy".to_string()));
     let orchestrator = Arc::new(Orchestrator::new());
-    let router = Arc::new(RouterAgent::new(llm.clone()));
+    let router = Arc::new(RouterAgent::new(llm.clone(), "Dummy Prompt"));
 
     let state = AppState {
         orchestrator,

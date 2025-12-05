@@ -1,3 +1,4 @@
+pub mod action;
 pub mod router;
 pub mod specialists;
 

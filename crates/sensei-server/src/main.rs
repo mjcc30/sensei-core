@@ -1,6 +1,8 @@
 use dotenvy::dotenv;
 use sensei_common::AgentCategory;
-use sensei_server::agents::{Orchestrator, router::RouterAgent, specialists::SpecializedAgent};
+use sensei_server::agents::{
+    Orchestrator, action::ToolExecutorAgent, router::RouterAgent, specialists::SpecializedAgent,
+};
 use sensei_server::config::load_prompts;
 use sensei_server::llm::LlmClient;
 use sensei_server::memory::MemoryStore;
@@ -14,8 +16,6 @@ async fn main() {
     dotenv().ok();
 
     // 1. Load Configuration (Prompts)
-    // We try to load prompts.yaml from the current directory.
-    // In production, this path should be configurable.
     let prompts_path = "prompts.yaml";
     let prompts_config = match load_prompts(prompts_path) {
         Ok(c) => {
@@ -31,7 +31,6 @@ async fn main() {
         }
     };
 
-    // Helper to retrieve prompt or fallback
     let get_prompt = |key: &str, default: &str| -> String {
         if let Some(config) = &prompts_config {
             if let Some(agent_conf) = config.agents.get(key) {
@@ -60,32 +59,23 @@ async fn main() {
     // 4. Init Swarm
     let mut orchestrator = Orchestrator::new();
 
-    // Register Specialists with Dynamic Prompts
+    // Register Specialists
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Red,
-        &get_prompt(
-            "red_team",
-            "SYSTEM: You are a Red Team Operator. Provide offensive security insights.",
-        ),
+        &get_prompt("red_team", "SYSTEM: You are a Red Team Operator."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Blue,
-        &get_prompt(
-            "blue_team",
-            "SYSTEM: You are a Blue Team Analyst. Provide defensive security insights.",
-        ),
+        &get_prompt("blue_team", "SYSTEM: You are a Blue Team Analyst."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Cloud,
-        &get_prompt(
-            "cloud",
-            "SYSTEM: You are a Cloud Security Architect. Audit AWS/Azure/GCP configurations.",
-        ),
+        &get_prompt("cloud", "SYSTEM: You are a Cloud Security Architect."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
@@ -103,7 +93,7 @@ async fn main() {
     orchestrator.register(Box::new(SpecializedAgent::new(
         llm_client.clone(),
         AgentCategory::Casual,
-        &get_prompt("casual", "SYSTEM: You are Sensei, a helpful AI assistant."),
+        &get_prompt("casual", "SYSTEM: You are Sensei."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
@@ -112,16 +102,25 @@ async fn main() {
         &get_prompt("novice", "SYSTEM: You are a Teacher."),
     )));
 
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
-        AgentCategory::System,
-        &get_prompt("system", "SYSTEM: You are Root."),
-    )));
+    // Register Tool Agents (Action & System)
+    let mut action_agent = ToolExecutorAgent::new(llm_client.clone(), AgentCategory::Action);
+    action_agent.register_tool(Box::new(sensei_server::tools::nmap::NmapTool));
+    orchestrator.register(Box::new(action_agent));
+
+    let mut system_agent = ToolExecutorAgent::new(llm_client.clone(), AgentCategory::System);
+    system_agent.register_tool(Box::new(sensei_server::tools::system::SystemTool));
+    orchestrator.register(Box::new(system_agent));
 
     // 5. Init Router
-    // Note: RouterAgent currently has its prompt hardcoded in `router.rs`.
-    // Ideally, we should inject it there too.
-    let router = Arc::new(RouterAgent::new(llm_client.clone()));
+    let router_prompt = get_prompt(
+        "router",
+        r#"
+        You are a Query Optimizer.
+        Classify user input into: Red, Blue, Osint, Cloud, Crypto, System, Action, Casual, Novice.
+        Output strictly JSON format: {"category": "CategoryName", "enhanced_query": "Query"}
+        "#,
+    );
+    let router = Arc::new(RouterAgent::new(llm_client.clone(), &router_prompt));
 
     // 6. Build State
     let state = AppState {

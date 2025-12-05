@@ -48,7 +48,7 @@ def wait_for_server():
 
 def query_server(prompt):
     req = urllib.request.Request(
-        SERVER_URL, 
+        SERVER_URL,
         data=json.dumps({"prompt": prompt}).encode('utf-8'),
         headers={'Content-Type': 'application/json'}
     )
@@ -65,15 +65,15 @@ def query_server(prompt):
 
 def run_quality_test():
     print("🧪 Starting V3 Quality Assurance...\n")
-    
+
     # Start Server
     server_env = os.environ.copy()
     if API_KEY:
         server_env["GEMINI_API_KEY"] = API_KEY
     # Else: let the server load from .env via dotenvy
-    
+
     server = subprocess.Popen([SERVER_BIN], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=server_env)
-    
+
     if not wait_for_server():
         print("❌ Server failed to start.")
         server.kill()
@@ -86,13 +86,13 @@ def run_quality_test():
         for case in TEST_CASES:
             print(f"► Testing: {case['name']}")
             print(f"  Query: '{case['query']}'")
-            
+
             response = query_server(case['query'])
-            
+
             # Checks
             passed = True
             missing = []
-            
+
             if not response:
                 print("  ❌ No response received.")
                 passed = False
@@ -102,7 +102,7 @@ def run_quality_test():
                     if kw.lower() not in response.lower():
                         missing.append(kw)
                         passed = False
-                
+
                 # Check Forbidden
                 for kw in case['forbidden_keywords']:
                     if kw.lower() in response.lower():
@@ -134,5 +134,5 @@ if __name__ == "__main__":
     if not os.path.exists(SERVER_BIN):
         print(f"Binary not found at {SERVER_BIN}. Run 'cargo build --release' first.")
         sys.exit(1)
-        
+
     run_quality_test()
