@@ -32,12 +32,11 @@ async fn main() {
     };
 
     let get_prompt = |key: &str, default: &str| -> String {
-        if let Some(config) = &prompts_config {
-            if let Some(agent_conf) = config.agents.get(key) {
-                return agent_conf.prompt.clone();
-            }
-        }
-        default.to_string()
+        prompts_config
+            .as_ref()
+            .and_then(|config| config.agents.get(key))
+            .map(|agent_conf| agent_conf.prompt.clone())
+            .unwrap_or_else(|| default.to_string())
     };
 
     // 2. Init LLM
