@@ -14,12 +14,13 @@ async fn health_check_works() {
     let memory = MemoryStore::new("sqlite::memory:").await.unwrap();
     let llm = Arc::new(LlmClient::new("dummy".to_string()));
 
-        let state = AppState {
-            orchestrator: Arc::new(Orchestrator::new()),
-            router: Arc::new(RouterAgent::new(llm.clone(), "Dummy Prompt")),
-            memory,
-            llm,
-        };    let app = app(state);
+    let state = AppState {
+        orchestrator: Arc::new(Orchestrator::new()),
+        router: Arc::new(RouterAgent::new(llm.clone(), "Dummy Prompt")),
+        memory,
+        llm,
+    };
+    let app = app(state);
 
     let response = app
         .oneshot(

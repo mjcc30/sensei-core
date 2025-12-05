@@ -27,13 +27,17 @@ impl Llm for SpyLlm {
     async fn embed(&self, _text: &str) -> anyhow::Result<Vec<f32>> {
         Ok(vec![0.0; 3072])
     }
+
+    async fn generate_raw(&self, prompt: &str) -> anyhow::Result<String> {
+        self.generate(prompt).await
+    }
 }
 
 #[tokio::test]
 async fn specialist_injects_system_prompt() {
     let spy = Arc::new(SpyLlm::new());
 
-    let agent = SpecializedAgent::new(spy.clone(), AgentCategory::Red, "YOU ARE RED TEAM.");
+    let agent = SpecializedAgent::new(spy.clone(), AgentCategory::Red, "YOU ARE RED TEAM.", None);
 
     let _response = agent.process("How to hack?").await;
 

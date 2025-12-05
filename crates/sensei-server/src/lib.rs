@@ -9,15 +9,15 @@ use crate::agents::router::RouterAgent;
 use crate::llm::Llm;
 use crate::memory::MemoryStore;
 use axum::{
+    Json, Router,
     extract::State,
     http::{HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
-    Json, Router,
 };
 use sensei_common::{AskRequest, AskResponse, Health};
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -154,7 +154,10 @@ async fn ask_handler(
     };
 
     // 4. Dispatch to Agent using context-enriched query
-    let content = state.orchestrator.dispatch(decision.category, &final_prompt).await;
+    let content = state
+        .orchestrator
+        .dispatch(decision.category, &final_prompt)
+        .await;
 
     // 5. Persist AI Message
     if let Err(e) = state

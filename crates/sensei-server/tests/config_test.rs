@@ -16,6 +16,12 @@ agents:
 
     let config = load_prompts(file.path().to_str().unwrap()).unwrap();
 
-    assert_eq!(config.agents.get("router").unwrap().prompt, "You are a Router.");
-    assert_eq!(config.agents.get("red_team").unwrap().prompt, "You are Red.");
+    assert_eq!(
+        config.agents.get("router").unwrap().prompt,
+        "You are a Router."
+    );
+    assert_eq!(
+        config.agents.get("red_team").unwrap().prompt,
+        "You are Red."
+    );
 }

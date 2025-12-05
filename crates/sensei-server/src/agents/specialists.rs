@@ -8,14 +8,21 @@ pub struct SpecializedAgent {
     llm: Arc<dyn Llm>,
     category: AgentCategory,
     system_prompt: String,
+    master_prompt: Option<String>,
 }
 
 impl SpecializedAgent {
-    pub fn new(llm: Arc<dyn Llm>, category: AgentCategory, system_prompt: &str) -> Self {
+    pub fn new(
+        llm: Arc<dyn Llm>,
+        category: AgentCategory,
+        system_prompt: &str,
+        master_prompt: Option<String>,
+    ) -> Self {
         Self {
             llm,
             category,
             system_prompt: system_prompt.to_string(),
+            master_prompt,
         }
     }
 }
@@ -23,16 +30,25 @@ impl SpecializedAgent {
 #[async_trait]
 impl Agent for SpecializedAgent {
     async fn process(&self, input: &str) -> String {
-        // Simple prompt concatenation for now.
-        // Ideally, we should update Llm trait to handle ChatMessage vectors for proper System/User separation.
-        let full_prompt = format!(
-            "{}
+        let is_raw_mode = input.contains("--raw");
 
-User Query: {}",
-            self.system_prompt, input
-        );
+        // Select prompt based on mode
+        let sys_prompt = if is_raw_mode && self.master_prompt.is_some() {
+            self.master_prompt.as_ref().unwrap()
+        } else {
+            &self.system_prompt
+        };
 
-        match self.llm.generate(&full_prompt).await {
+        let full_prompt = format!("{}\n\nUser Query: {}", sys_prompt, input);
+
+        // Use raw generation (bypass filters) if --raw is requested AND allowed for this agent (Red)
+        let result = if is_raw_mode && self.category == AgentCategory::Red {
+            self.llm.generate_raw(&full_prompt).await
+        } else {
+            self.llm.generate(&full_prompt).await
+        };
+
+        match result {
             Ok(response) => response,
             Err(e) => {
                 eprintln!("Agent {:?} Error: {}", self.category, e);

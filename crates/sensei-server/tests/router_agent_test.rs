@@ -17,6 +17,10 @@ impl Llm for MockLlm {
     async fn embed(&self, _text: &str) -> anyhow::Result<Vec<f32>> {
         Ok(vec![0.0; 3072])
     }
+
+    async fn generate_raw(&self, prompt: &str) -> anyhow::Result<String> {
+        self.generate(prompt).await
+    }
 }
 
 #[tokio::test]

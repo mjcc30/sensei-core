@@ -1,10 +1,10 @@
 use clap::{Parser, Subcommand};
 use reqwest::Client;
 use sensei_common::{AskRequest, AskResponse};
-use std::error::Error;
-use std::path::PathBuf;
-use std::fs;
 use serde_json::json;
+use std::error::Error;
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -24,9 +24,7 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Ask a question to Sensei
-    Ask {
-        prompt: String,
-    },
+    Ask { prompt: String },
     /// Add a document to Sensei's knowledge base (RAG)
     Add {
         #[arg(value_name = "FILE")]
@@ -70,7 +68,7 @@ async fn handle_ask(client: &Client, base_url: &str, prompt: &str) -> Result<(),
         eprintln!("❌ Server Error: {}", response.status());
         let text = response.text().await?;
         eprintln!("Details: {}", text);
-        return Ok(())
+        return Ok(());
     }
 
     let result: AskResponse = response.json().await?;

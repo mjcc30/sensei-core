@@ -34,6 +34,10 @@ impl Llm for DecisionLlm {
     async fn embed(&self, _text: &str) -> Result<Vec<f32>> {
         Ok(vec![0.0; 3072])
     }
+
+    async fn generate_raw(&self, prompt: &str) -> Result<String> {
+        self.generate(prompt).await
+    }
 }
 
 #[tokio::test]
