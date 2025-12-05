@@ -20,12 +20,12 @@ async fn bdd_memory_flow() {
     let orchestrator = Arc::new(Orchestrator::new());
     let router = Arc::new(RouterAgent::new(llm.clone(), "Dummy Prompt"));
 
-    let state = AppState {
-        orchestrator,
-        router,
-        memory: memory.clone(),
-    };
-    let app_router = app(state);
+        let state = AppState {
+            orchestrator,
+            router,
+            memory: memory.clone(),
+            llm,
+        };    let app_router = app(state);
 
     // 2. First Request
     let req1 = Request::builder()

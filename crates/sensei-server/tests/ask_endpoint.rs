@@ -19,12 +19,12 @@ async fn ask_endpoint_returns_response() {
     let orchestrator = Arc::new(Orchestrator::new());
     let router = Arc::new(RouterAgent::new(llm.clone(), "Dummy Prompt"));
 
-    let state = AppState {
-        orchestrator,
-        router,
-        memory,
-    };
-    let app = app(state);
+        let state = AppState {
+            orchestrator,
+            router,
+            memory,
+            llm,
+        };    let app = app(state);
 
     let request_body = json!({
         "prompt": "Hello Sensei"

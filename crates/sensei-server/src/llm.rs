@@ -2,11 +2,13 @@ use anyhow::{Result, bail};
 use async_trait::async_trait;
 use genai::Client;
 use genai::chat::{ChatMessage, ChatRequest};
+use genai::embed::EmbedRequest;
 use std::env;
 
 #[async_trait]
 pub trait Llm: Send + Sync {
     async fn generate(&self, prompt: &str) -> Result<String>;
+    async fn embed(&self, text: &str) -> Result<Vec<f32>>;
 }
 
 pub struct LlmClient {
@@ -36,6 +38,19 @@ impl LlmClient {
 
 #[async_trait]
 impl Llm for LlmClient {
+    async fn embed(&self, text: &str) -> Result<Vec<f32>> {
+        let req = EmbedRequest::new(text.to_string());
+        let model = "text-embedding-004";
+
+        let response = self.client.exec_embed(model, req, None).await?;
+
+        if let Some(embedding) = response.embeddings.first() {
+            Ok(embedding.vector.clone())
+        } else {
+            bail!("No embedding generated")
+        }
+    }
+
     async fn generate(&self, prompt: &str) -> Result<String> {
         let chat_req = ChatRequest::new(vec![ChatMessage::user(prompt)]);
 

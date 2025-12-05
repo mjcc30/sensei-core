@@ -1988,6 +1988,7 @@ dependencies = [
  "reqwest",
  "sensei-common",
  "serde",
+ "serde_json",
  "tokio",
 ]
 

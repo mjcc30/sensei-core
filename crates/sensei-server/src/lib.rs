@@ -6,16 +6,18 @@ pub mod tools;
 
 use crate::agents::Orchestrator;
 use crate::agents::router::RouterAgent;
+use crate::llm::Llm;
 use crate::memory::MemoryStore;
 use axum::{
-    Json, Router,
     extract::State,
-    http::HeaderMap,
+    http::{HeaderMap, StatusCode},
     response::IntoResponse,
     routing::{get, post},
+    Json, Router,
 };
 use sensei_common::{AskRequest, AskResponse, Health};
-use serde_json::{Value, json};
+use serde::Deserialize;
+use serde_json::{json, Value};
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -23,6 +25,7 @@ pub struct AppState {
     pub orchestrator: Arc<Orchestrator>,
     pub router: Arc<RouterAgent>,
     pub memory: MemoryStore,
+    pub llm: Arc<dyn Llm>,
 }
 
 pub fn app(state: AppState) -> Router {
@@ -30,6 +33,7 @@ pub fn app(state: AppState) -> Router {
         .route("/health", get(health_check))
         .route("/v1/ask", post(ask_handler))
         .route("/v1/debug/classify", post(debug_classify_handler))
+        .route("/v1/knowledge/add", post(add_document_handler))
         .with_state(state)
 }
 
@@ -37,6 +41,42 @@ async fn health_check() -> Json<Health> {
     Json(Health {
         status: "ok".to_string(),
     })
+}
+
+#[derive(Deserialize)]
+struct AddDocumentRequest {
+    content: String,
+}
+
+async fn add_document_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<AddDocumentRequest>,
+) -> impl IntoResponse {
+    // 1. Generate Embedding
+    let embedding = match state.llm.embed(&payload.content).await {
+        Ok(vec) => vec,
+        Err(e) => {
+            eprintln!("Embedding Error: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": "Failed to generate embedding"})),
+            );
+        }
+    };
+
+    // 2. Store Document
+    if let Err(e) = state.memory.add_document(&payload.content, embedding).await {
+        eprintln!("Storage Error: {}", e);
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": "Failed to store document"})),
+        );
+    }
+
+    (
+        StatusCode::OK,
+        Json(json!({"status": "Document ingested successfully"})),
+    )
 }
 
 async fn debug_classify_handler(

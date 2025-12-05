@@ -23,6 +23,10 @@ impl Llm for SpyLlm {
         *self.last_prompt.lock().unwrap() = prompt.to_string();
         Ok("Mock Response".to_string())
     }
+
+    async fn embed(&self, _text: &str) -> anyhow::Result<Vec<f32>> {
+        Ok(vec![0.0; 768])
+    }
 }
 
 #[tokio::test]

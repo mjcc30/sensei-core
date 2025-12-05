@@ -128,4 +128,71 @@ impl MemoryStore {
         .await?;
         Ok(messages)
     }
+
+    // --- RAG / Vectors ---
+
+    pub async fn add_document(&self, content: &str, embedding: Vec<f32>) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
+
+        // 1. Insert content
+        // Use query_scalar! for standard table, but handle Option return (though fetch_one should return T)
+        // fetch_one returns Result<T, Error>. query_scalar returns Record which might be mapped.
+        // Let's use sqlx::query to be safe and consistent with vector part.
+
+        use sqlx::Row;
+        let row = sqlx::query("INSERT INTO documents (content) VALUES (?) RETURNING id")
+            .bind(content)
+            .fetch_one(&mut *tx)
+            .await?;
+
+        let id: i64 = row.get("id");
+
+        // 2. Insert vector (using rowid = id)
+        // Use sqlx::query (not macro) because vec0 extension is not loaded in cargo check
+        let vector_bytes = f32_vec_to_bytes(&embedding);
+        sqlx::query("INSERT INTO vec_items (rowid, embedding) VALUES (?, ?)")
+            .bind(id)
+            .bind(vector_bytes)
+            .execute(&mut *tx)
+            .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn search_documents(
+        &self,
+        query_embedding: Vec<f32>,
+        limit: i64,
+    ) -> Result<Vec<String>> {
+        let vector_bytes = f32_vec_to_bytes(&query_embedding);
+
+        // Join vec_items with documents
+        // Use sqlx::query (not macro)
+        let rows = sqlx::query(
+            r#"
+            SELECT d.content, v.distance
+            FROM vec_items v
+            JOIN documents d ON v.rowid = d.id
+            WHERE v.embedding MATCH ? AND k = ?
+            ORDER BY v.distance
+            "#,
+        )
+        .bind(vector_bytes)
+        .bind(limit)
+        .fetch_all(&self.pool)
+        .await?;
+
+        use sqlx::Row;
+        let results: Vec<String> = rows.iter().map(|row| row.get("content")).collect();
+        Ok(results)
+    }
+}
+
+fn f32_vec_to_bytes(v: &[f32]) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(v.len() * 4);
+    for f in v {
+        bytes.extend_from_slice(&f.to_le_bytes());
+    }
+    bytes
 }

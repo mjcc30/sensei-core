@@ -126,6 +126,7 @@ async fn main() {
         orchestrator: Arc::new(orchestrator),
         router,
         memory,
+        llm: llm_client,
     };
 
     // 7. Start Server

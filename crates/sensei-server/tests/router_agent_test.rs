@@ -13,6 +13,10 @@ impl Llm for MockLlm {
     async fn generate(&self, _prompt: &str) -> anyhow::Result<String> {
         Ok(self.response.clone())
     }
+
+    async fn embed(&self, _text: &str) -> anyhow::Result<Vec<f32>> {
+        Ok(vec![0.0; 768])
+    }
 }
 
 #[tokio::test]

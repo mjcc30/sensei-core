@@ -9,10 +9,10 @@ These features exist in Python v2 but are missing in Rust v3.
     - [x] Create `ToolExecutorAgent` implementing `Agent` trait.
     - [x] Connect `NmapTool` and `SystemTool` to this agent.
     - [x] Update `Orchestrator` to dispatch `AgentCategory::Action` to this agent.
-- [ ] **RAG Ingestion:**
-    - [ ] Add CLI command `--add <file>` to ingest documents.
-    - [ ] Implement chunking and embedding logic in `sensei-server`.
-    - [ ] Store vectors in `sqlite-vec`.
+- [x] **RAG Ingestion:**
+    - [x] Add CLI command `--add <file>` to ingest documents.
+    - [x] Implement chunking and embedding logic in `sensei-server`.
+    - [x] Store vectors in `sqlite-vec`.
 
 ## 🏗️ Phase 1: Foundation (Workspace & Architecture)
 - [x] **Setup Workspace:** Convert project to Rust Workspace (`server`, `client`, `common`).

@@ -30,6 +30,10 @@ impl Llm for DecisionLlm {
     async fn generate(&self, _prompt: &str) -> Result<String> {
         Ok(self.response.clone())
     }
+
+    async fn embed(&self, _text: &str) -> Result<Vec<f32>> {
+        Ok(vec![0.0; 768])
+    }
 }
 
 #[tokio::test]
