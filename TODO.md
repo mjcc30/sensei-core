@@ -5,10 +5,10 @@
 ## 🚨 Critical Missing Features (V2 Parity)
 These features exist in Python v2 but are missing in Rust v3.
 
-- [ ] **Action Agent (Tools):**
-    - [ ] Create `ToolExecutorAgent` implementing `Agent` trait.
-    - [ ] Connect `NmapTool` and `SystemTool` to this agent.
-    - [ ] Update `Orchestrator` to dispatch `AgentCategory::Action` to this agent.
+- [x] **Action Agent (Tools):**
+    - [x] Create `ToolExecutorAgent` implementing `Agent` trait.
+    - [x] Connect `NmapTool` and `SystemTool` to this agent.
+    - [x] Update `Orchestrator` to dispatch `AgentCategory::Action` to this agent.
 - [ ] **RAG Ingestion:**
     - [ ] Add CLI command `--add <file>` to ingest documents.
     - [ ] Implement chunking and embedding logic in `sensei-server`.
