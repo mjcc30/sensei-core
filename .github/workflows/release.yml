@@ -34,6 +34,7 @@ jobs:
 
           # Config & Dist
           cp prompts.yaml $DIR/
+          cp prompts.example.yaml $DIR/
           cp .env.example $DIR/
           cp -r dist $DIR/
           cp README.md $DIR/
