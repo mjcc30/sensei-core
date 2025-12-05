@@ -45,7 +45,7 @@ These features exist in Python v2 but are missing in Rust v3.
 
 ## 🔧 Maintenance & Tech Debt
 - [ ] **Embedding Migration:** Migrate from `text-embedding-004` to `gemini-embedding-001` before Jan 2026. Requires updating `sqlite-vec` schema or using `output_dimensionality=768`.
-- [ ] **A2A Communication:** Implement true Agent-to-Agent loops (ReAct pattern) to reduce Orchestrator bottleneck.
+- [x] **A2A Communication:** Implement true Agent-to-Agent loops (ReAct pattern). Code is ready (`Orchestrator::dispatch_loop`), needs prompt instructions to activate.
 
 ## 🔮 Future Vision (Phase 5: Security Model)
 - [ ] **Access Control (MAC/ABAC):** Implement Bell-LaPadula model within the agent swarm.

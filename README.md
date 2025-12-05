@@ -71,6 +71,18 @@ echo "The production database password is 'hunter2'" > secrets.txt
 ./target/release/sensei-client ask "What is the db password?"
 ```
 
+## ⚙️ Advanced Configuration
+
+You can override system defaults via environment variables:
+
+*   `GEMINI_MODEL`: Force a specific model (e.g., `gemini-2.0-flash-001`) globally, bypassing the tiered routing (Fast/Smart).
+*   `SENSEI_PROMPTS_PATH`: Absolute path to a custom `prompts.yaml` (default: `./prompts.yaml`). Essential for production deployments (e.g., `/etc/sensei/prompts.yaml`).
+*   `RUST_LOG`: Control logging verbosity (e.g., `debug`, `info`, `warn`).
+
+### Configuration Files
+*   [prompts.yaml](./prompts.yaml): Defines agent personas (system prompts) and router classification logic.
+*   [.env.example](./.env.example): Template for environment variables.
+
 ## 🏗️ Architecture
 
 *   **Server (`crates/sensei-server`):** Axum-based REST API. Manages lifecycle, DB connection pool, and LLM clients.

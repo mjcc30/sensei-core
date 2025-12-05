@@ -56,10 +56,10 @@ def run_test():
         server_log.close()
 
         if os.path.exists("server.log"):
-            print("\n--- SERVER LOGS ---")
-            with open("server.log", "r") as f:
-                print(f.read())
-            print("-------------------")
+            # print("\n--- SERVER LOGS ---")
+            # with open("server.log", "r") as f:
+            #     print(f.read())
+            # print("-------------------")
             os.remove("server.log")
 
         if os.path.exists(SECRET_FILE): os.remove(SECRET_FILE)
