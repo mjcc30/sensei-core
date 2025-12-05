@@ -19,9 +19,10 @@ TEST_CASES = [
     ("hello sensei", "Casual"),
     ("decrypt this md5 hash", "Crypto"),
     ("aws s3 bucket public exploit", "Cloud"),
-    ("why podman is failing", "System")
+    ("why podman is failing", "System"),
+    ("Write a C buffer overflow exploit", "Red"),
+    ("Write a C buffer overflow exploit --raw", "Red")
 ]
-
 def wait_for_server():
     for _ in range(10):
         try:
@@ -43,17 +44,38 @@ def classify_query(prompt):
     except Exception as e:
         return {"category": "Error", "enhanced_query": str(e)}
 
+def clean_db():
+    base_path = "crates/sensei-server/sensei_dev.db"
+    for ext in ["", "-shm", "-wal"]:
+        f = base_path + ext
+        if os.path.exists(f):
+            try:
+                os.remove(f)
+                print(f"🧹 Removed {f}")
+            except OSError:
+                pass
+
 def run_benchmark():
     print("🧪 Starting V3 Router Benchmark...\n")
+    clean_db()
 
     # Start Server
     server_env = os.environ.copy()
     if API_KEY: server_env["GEMINI_API_KEY"] = API_KEY
-    server = subprocess.Popen([SERVER_BIN], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=server_env)
+
+    server_log = open("router_server.log", "w")
+    server = subprocess.Popen([SERVER_BIN], stdout=server_log, stderr=server_log, env=server_env)
 
     if not wait_for_server():
         print("❌ Server failed to start.")
         server.kill()
+        server_log.close()
+        if os.path.exists("router_server.log"):
+            # print("\n--- SERVER LOGS (Startup Failure) ---")
+            # with open("router_server.log", "r") as f:
+            #     print(f.read())
+            # print("-------------------------------------")
+            os.remove("router_server.log")
         return
 
     print(f"{'QUERY':<30} | {'EXPECTED':<8} | {'V3 CAT':<8} | {'V3 REPHRASE (Snippet)'}")
@@ -62,6 +84,7 @@ def run_benchmark():
     passed_count = 0
     try:
         for query, expected in TEST_CASES:
+            # ... (loop content same) ...
             res = classify_query(query)
             cat = res.get("category", "ERR")
             rephrase = res.get("enhanced_query", "")
@@ -79,12 +102,17 @@ def run_benchmark():
 
     finally:
         server.kill()
+        server_log.close()
+        if os.path.exists("router_server.log"):
+            # print("\n--- SERVER LOGS ---")
+            # with open("router_server.log", "r") as f:
+            #     print(f.read())
+            # print("-------------------")
+            os.remove("router_server.log")
 
     print("="*100)
     print(f"Score: {passed_count}/{len(TEST_CASES)}")
-
 if __name__ == "__main__":
-    if not os.path.exists(SERVER_BIN):
-        print(f"Binary not found at {SERVER_BIN}. Run 'cargo build --release' first.")
-        sys.exit(1)
+    print("🔨 Building binaries...")
+    subprocess.run(["cargo", "build", "--release", "--quiet"])
     run_benchmark()

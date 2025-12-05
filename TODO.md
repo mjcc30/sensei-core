@@ -46,3 +46,13 @@ These features exist in Python v2 but are missing in Rust v3.
 ## 🔧 Maintenance & Tech Debt
 - [ ] **Embedding Migration:** Migrate from `text-embedding-004` to `gemini-embedding-001` before Jan 2026. Requires updating `sqlite-vec` schema or using `output_dimensionality=768`.
 - [ ] **A2A Communication:** Implement true Agent-to-Agent loops (ReAct pattern) to reduce Orchestrator bottleneck.
+
+## 🔮 Future Vision (Phase 5: Security Model)
+- [ ] **Access Control (MAC/ABAC):** Implement Bell-LaPadula model within the agent swarm.
+    - [ ] **Data Classification:** Tag ingested documents with levels (Unclassified, Confidential, Secret, Top Secret).
+    - [ ] **Agent Clearance:** Assign security clearance levels to each Agent (e.g., Casual=Unclassified, RedTeam=Top Secret).
+    - [ ] **Enforcement:** Modify `MemoryStore::search` to enforce "No Read Up" policy (filtering vectors by classification).
+    - [ ] **User Authentication:**
+        - [ ] Switch transport to Unix Domain Sockets (UDS) with `chmod 700` to restrict access to the owner.
+        - [ ] Implement `SO_PEERCRED` verification to block unauthorized local users/processes.
+        - [ ] Add API Key/Token authentication for authorized remote clients.
