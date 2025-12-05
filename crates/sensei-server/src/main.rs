@@ -4,7 +4,7 @@ use sensei_server::agents::{
     Orchestrator, action::ToolExecutorAgent, router::RouterAgent, specialists::SpecializedAgent,
 };
 use sensei_server::config::load_prompts;
-use sensei_server::llm::LlmClient;
+use sensei_server::llm::{LlmClient, MODEL_CHAT_DEFAULT};
 use sensei_server::memory::MemoryStore;
 use sensei_server::{AppState, app};
 use std::env;
@@ -39,12 +39,24 @@ async fn main() {
             .unwrap_or_else(|| default.to_string())
     };
 
-    // 2. Init LLM
+    // 2. Init LLM Clients (Model Routing)
     let api_key = env::var("GEMINI_API_KEY").unwrap_or_else(|_| {
         eprintln!("Warning: GEMINI_API_KEY not set.");
         "dummy".to_string()
     });
-    let llm_client = Arc::new(LlmClient::new(api_key));
+
+    // ⚡ Fast Tier: Low latency, lower cost (Router, Casual, Tools)
+    // Falls back to "auto" logic if env var overrides, but explicit call prefers specific model
+    let fast_llm = Arc::new(LlmClient::new_with_model(
+        api_key.clone(),
+        MODEL_CHAT_DEFAULT,
+    ));
+
+    // 🧠 Smart Tier: High reasoning, higher cost (Specialists)
+    let smart_llm = Arc::new(LlmClient::new_with_model(
+        api_key.clone(),
+        MODEL_CHAT_DEFAULT, // Using default Flash for smart too, as it beats 1.5 Pro often
+    ));
 
     // 3. Init Memory
     let db_url = env::var("DATABASE_URL").unwrap_or("sqlite://sensei.db?mode=rwc".to_string());
@@ -58,45 +70,52 @@ async fn main() {
     // 4. Init Swarm
     let mut orchestrator = Orchestrator::new();
 
-    // Register Specialists
+    // Specialists -> Smart LLM
     orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
+        smart_llm.clone(),
         AgentCategory::Red,
         &get_prompt("red_team", "SYSTEM: You are a Red Team Operator."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
+        smart_llm.clone(),
         AgentCategory::Blue,
         &get_prompt("blue_team", "SYSTEM: You are a Blue Team Analyst."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
+        smart_llm.clone(),
         AgentCategory::Cloud,
         &get_prompt("cloud", "SYSTEM: You are a Cloud Security Architect."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
+        smart_llm.clone(),
         AgentCategory::Crypto,
         &get_prompt("crypto", "SYSTEM: You are a Cryptographer."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
+        smart_llm.clone(),
         AgentCategory::Osint,
         &get_prompt("osint", "SYSTEM: You are an Intelligence Officer."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
+        smart_llm.clone(),
+        AgentCategory::System,
+        &get_prompt("system", "SYSTEM: You are Root."),
+    )));
+
+    // Casual/Novice -> Fast LLM
+    orchestrator.register(Box::new(SpecializedAgent::new(
+        fast_llm.clone(),
         AgentCategory::Casual,
         &get_prompt("casual", "SYSTEM: You are Sensei."),
     )));
 
     orchestrator.register(Box::new(SpecializedAgent::new(
-        llm_client.clone(),
+        fast_llm.clone(),
         AgentCategory::Novice,
         &get_prompt("novice", "SYSTEM: You are a Teacher."),
     )));
@@ -134,5 +153,7 @@ async fn main() {
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
 
     println!("🚀 Sensei Server running on http://0.0.0.0:3000 (Swarm Mode)");
+    println!("⚡ Models: {} (Fast & Smart)", MODEL_CHAT_DEFAULT);
+    
     axum::serve(listener, app).await.unwrap();
 }

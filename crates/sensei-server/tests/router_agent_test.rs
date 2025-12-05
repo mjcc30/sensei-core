@@ -15,7 +15,7 @@ impl Llm for MockLlm {
     }
 
     async fn embed(&self, _text: &str) -> anyhow::Result<Vec<f32>> {
-        Ok(vec![0.0; 768])
+        Ok(vec![0.0; 3072])
     }
 }
 

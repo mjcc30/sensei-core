@@ -129,11 +129,32 @@ async fn ask_handler(
         payload.prompt, decision.category, decision.query
     );
 
-    // 4. Dispatch to Agent using OPTIMIZED query
-    let content = state
-        .orchestrator
-        .dispatch(decision.category, &decision.query)
-        .await;
+    // 3.5. RAG Retrieval
+    let context_docs = match state.llm.embed(&decision.query).await {
+        Ok(embedding) => state
+            .memory
+            .search_documents(embedding, 3)
+            .await
+            .unwrap_or_default(),
+        Err(e) => {
+            eprintln!("RAG Embedding Failed: {}", e);
+            vec![]
+        }
+    };
+
+    let final_prompt = if !context_docs.is_empty() {
+        println!("📚 RAG: Found {} relevant documents.", context_docs.len());
+        format!(
+            "RELEVANT KNOWLEDGE:\n{}\n\nUSER QUERY:\n{}",
+            context_docs.join("\n---\n"),
+            decision.query
+        )
+    } else {
+        decision.query
+    };
+
+    // 4. Dispatch to Agent using context-enriched query
+    let content = state.orchestrator.dispatch(decision.category, &final_prompt).await;
 
     // 5. Persist AI Message
     if let Err(e) = state

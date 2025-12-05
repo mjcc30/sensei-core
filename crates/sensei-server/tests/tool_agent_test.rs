@@ -32,7 +32,7 @@ impl Llm for DecisionLlm {
     }
 
     async fn embed(&self, _text: &str) -> Result<Vec<f32>> {
-        Ok(vec![0.0; 768])
+        Ok(vec![0.0; 3072])
     }
 }
 

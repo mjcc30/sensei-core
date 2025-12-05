@@ -16,12 +16,12 @@ pub struct LlmClient {
     model_config: String,
 }
 
+pub const MODEL_CHAT_DEFAULT: &str = "gemini-2.5-flash";
+pub const MODEL_EMBEDDING: &str = "gemini/gemini-embedding-001";
+
 const MODELS_PREFERENCE: &[&str] = &[
-    "gemini-2.5-flash",
+    MODEL_CHAT_DEFAULT,
     "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-pro",
 ];
 
 impl LlmClient {
@@ -34,23 +34,28 @@ impl LlmClient {
             model_config,
         }
     }
+
+    pub fn new_with_model(_api_key: String, model: &str) -> Self {
+        let client = Client::default();
+        Self {
+            client,
+            model_config: model.to_string(),
+        }
+    }
 }
 
 #[async_trait]
 impl Llm for LlmClient {
     async fn embed(&self, text: &str) -> Result<Vec<f32>> {
         let req = EmbedRequest::new(text.to_string());
-        let model = "text-embedding-004";
-
-        let response = self.client.exec_embed(model, req, None).await?;
-
+        let response = self.client.exec_embed(MODEL_EMBEDDING, req, None).await?;
+        
         if let Some(embedding) = response.embeddings.first() {
             Ok(embedding.vector.clone())
         } else {
             bail!("No embedding generated")
         }
     }
-
     async fn generate(&self, prompt: &str) -> Result<String> {
         let chat_req = ChatRequest::new(vec![ChatMessage::user(prompt)]);
 

@@ -2019,6 +2019,7 @@ dependencies = [
  "serde_yaml",
  "sqlite-vec",
  "sqlx",
+ "tempfile",
  "tokio",
  "tower",
  "uuid",

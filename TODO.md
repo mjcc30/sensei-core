@@ -42,3 +42,7 @@ These features exist in Python v2 but are missing in Rust v3.
 - [x] **Documentation:** READMEs and Doc-tests for `sensei-common`.
 - [x] **Benchmarks:** V3 is **192x faster** than V2 (80ms vs 16s).
 - [x] **Behavior Tests:** Router achieves **6/7** accuracy on v2 benchmark dataset.
+
+## 🔧 Maintenance & Tech Debt
+- [ ] **Embedding Migration:** Migrate from `text-embedding-004` to `gemini-embedding-001` before Jan 2026. Requires updating `sqlite-vec` schema or using `output_dimensionality=768`.
+- [ ] **A2A Communication:** Implement true Agent-to-Agent loops (ReAct pattern) to reduce Orchestrator bottleneck.
