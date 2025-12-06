@@ -238,8 +238,8 @@ impl McpServer {
             })?;
 
         // Collapsed if using let chains (stable since 1.88)
-        if let Some(id_str) = uri.strip_prefix("sensei://knowledge/") 
-           && let Ok(id) = id_str.parse::<i64>() 
+        if let Some(id_str) = uri.strip_prefix("sensei://knowledge/")
+            && let Ok(id) = id_str.parse::<i64>()
         {
             let content = self
                 .memory
@@ -251,7 +251,7 @@ impl McpServer {
                 })?;
 
             return Ok(json!(@{
-                "contents": [{ 
+                "contents": [{
                     "uri": uri,
                     "mimeType": "text/plain",
                     "text": content

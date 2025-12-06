@@ -26,8 +26,7 @@ pub struct AppState {
 
 pub fn app(state: AppState) -> Router {
     // Public routes
-    let public_routes = Router::new()
-        .route("/health", get(health_check));
+    let public_routes = Router::new().route("/health", get(health_check));
 
     // Protected routes
     let protected_routes = Router::new()
@@ -56,9 +55,7 @@ async fn auth_middleware(req: Request, next: Next) -> Result<Response, StatusCod
         .and_then(|header| header.to_str().ok());
 
     match auth_header {
-        Some(header) if header == format!("Bearer {}", auth_token) => {
-            Ok(next.run(req).await)
-        }
+        Some(header) if header == format!("Bearer {}", auth_token) => Ok(next.run(req).await),
         _ => Err(StatusCode::UNAUTHORIZED),
     }
 }
@@ -136,7 +133,7 @@ async fn ask_handler(
                 content: "Failed to init session".to_string(),
             }),
         )
-        .into_response();
+            .into_response();
     }
 
     // 2. Persist User Message
