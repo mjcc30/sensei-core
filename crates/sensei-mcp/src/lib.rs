@@ -1,4 +1,3 @@
-use dotenvy::dotenv;
 use sensei_lib::memory::MemoryStore;
 use sensei_lib::tools::Tool;
 use sensei_lib::tools::nmap::NmapTool;
@@ -6,10 +5,6 @@ use sensei_lib::tools::system::SystemTool;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::HashMap;
-use std::env;
-use std::io::{self, BufRead};
-use std::sync::Arc;
-use tracing::{error, info};
 
 // --- JSON-RPC Types ---
 
@@ -243,8 +238,8 @@ impl McpServer {
             })?;
 
         // Collapsed if using let chains (stable since 1.88)
-        if let Some(id_str) = uri.strip_prefix("sensei://knowledge/")
-            && let Ok(id) = id_str.parse::<i64>()
+        if let Some(id_str) = uri.strip_prefix("sensei://knowledge/") 
+           && let Ok(id) = id_str.parse::<i64>() 
         {
             let content = self
                 .memory
@@ -255,8 +250,8 @@ impl McpServer {
                     message: format!("Failed to read doc: {}", e),
                 })?;
 
-            return Ok(json!({
-                "contents": [{
+            return Ok(json!(@{
+                "contents": [{ 
                     "uri": uri,
                     "mimeType": "text/plain",
                     "text": content

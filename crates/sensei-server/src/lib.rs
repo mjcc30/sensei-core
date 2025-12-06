@@ -1,8 +1,11 @@
-use axum::extract::State;
-use axum::http::{HeaderMap, StatusCode};
-use axum::response::IntoResponse;
-use axum::routing::{get, post};
-use axum::{Json, Router};
+use axum::{
+    Json, Router,
+    extract::{Request, State},
+    http::{HeaderMap, StatusCode},
+    middleware::{self, Next},
+    response::{IntoResponse, Response},
+    routing::{get, post},
+};
 use sensei_common::{AskRequest, AskResponse, Health};
 use sensei_lib::agents::Orchestrator;
 use sensei_lib::agents::router::RouterAgent;
@@ -10,6 +13,7 @@ use sensei_lib::llm::Llm;
 use sensei_lib::memory::MemoryStore;
 use serde::Deserialize;
 use serde_json::{Value, json};
+use std::env;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -21,12 +25,42 @@ pub struct AppState {
 }
 
 pub fn app(state: AppState) -> Router {
-    Router::new()
-        .route("/health", get(health_check))
+    // Public routes
+    let public_routes = Router::new()
+        .route("/health", get(health_check));
+
+    // Protected routes
+    let protected_routes = Router::new()
         .route("/v1/ask", post(ask_handler))
         .route("/v1/debug/classify", post(debug_classify_handler))
         .route("/v1/knowledge/add", post(add_document_handler))
+        .layer(middleware::from_fn(auth_middleware));
+
+    Router::new()
+        .merge(public_routes)
+        .merge(protected_routes)
         .with_state(state)
+}
+
+async fn auth_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
+    let auth_token = env::var("SENSEI_AUTH_TOKEN").unwrap_or_default();
+
+    // If no token configured, allow all (Development mode)
+    if auth_token.is_empty() {
+        return Ok(next.run(req).await);
+    }
+
+    let auth_header = req
+        .headers()
+        .get("Authorization")
+        .and_then(|header| header.to_str().ok());
+
+    match auth_header {
+        Some(header) if header == format!("Bearer {}", auth_token) => {
+            Ok(next.run(req).await)
+        }
+        _ => Err(StatusCode::UNAUTHORIZED),
+    }
 }
 
 async fn health_check() -> Json<Health> {
@@ -102,7 +136,7 @@ async fn ask_handler(
                 content: "Failed to init session".to_string(),
             }),
         )
-            .into_response();
+        .into_response();
     }
 
     // 2. Persist User Message
