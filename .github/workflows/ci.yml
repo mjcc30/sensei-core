@@ -41,9 +41,11 @@ jobs:
       - name: 🗄️ Setup SQLite DB
         run: |
           sudo apt-get update && sudo apt-get install -y sqlite3 nmap
-          # Create DB in server crate
-          cd crates/sensei-server
+          # Create DB in lib crate (where migrations are)
+          cd crates/sensei-lib
           sqlite3 sensei_dev.db < migrations/20250101_init.sql
+          # Try to run vectors migration (for 'documents' table), ignore vec0 error
+          sqlite3 sensei_dev.db < migrations/20250102_vectors.sql || true
           # Export env var for next steps (using GITHUB_ENV)
           echo "DATABASE_URL=sqlite://$(pwd)/sensei_dev.db" >> $GITHUB_ENV
 
@@ -83,9 +85,10 @@ jobs:
       - name: 🗄️ Setup SQLite DB
         run: |
           sudo apt-get update && sudo apt-get install -y sqlite3 nmap
-          # Create DB in server crate
-          cd crates/sensei-server
+          # Create DB in lib crate
+          cd crates/sensei-lib
           sqlite3 sensei_dev.db < migrations/20250101_init.sql
+          sqlite3 sensei_dev.db < migrations/20250102_vectors.sql || true
           # Export env var for next steps (using GITHUB_ENV)
           echo "DATABASE_URL=sqlite://$(pwd)/sensei_dev.db" >> $GITHUB_ENV
 
