@@ -10,6 +10,7 @@ use tracing::{error, info};
 async fn main() -> Result<()> {
     dotenv().ok();
 
+    // Init Logging to STDERR (Crucial for MCP!)
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
         .init();
@@ -39,7 +40,7 @@ async fn main() -> Result<()> {
         tokio::spawn(async move {
             let res = server_clone.handle_request(req).await;
             let json = serde_json::to_string(&res).unwrap();
-            println!("{}", json);
+            println!("{}", json); // Send to STDOUT
         });
     }
 

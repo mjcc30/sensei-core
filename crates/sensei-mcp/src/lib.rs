@@ -1,3 +1,4 @@
+use anyhow::Result;
 use sensei_lib::memory::MemoryStore;
 use sensei_lib::tools::Tool;
 use sensei_lib::tools::nmap::NmapTool;
@@ -10,14 +11,13 @@ use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 pub struct JsonRpcRequest {
-    // Prefix with _ to indicate intentional unused field (parsed but ignored logic-wise)
-    pub _jsonrpc: String,
-    pub id: Option<Value>,
+    pub jsonrpc: String,
+    pub id: Option<Value>, // Can be number or string
     pub method: String,
     pub params: Option<Value>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct JsonRpcResponse {
     pub jsonrpc: String,
     pub id: Option<Value>,
@@ -27,7 +27,7 @@ pub struct JsonRpcResponse {
     pub error: Option<JsonRpcError>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Debug)]
 pub struct JsonRpcError {
     pub code: i32,
     pub message: String,
@@ -59,12 +59,10 @@ pub struct McpServer {
 impl McpServer {
     pub async fn new(db_url: &str) -> anyhow::Result<Self> {
         let memory = MemoryStore::new(db_url).await?;
-        // Run migration to ensure DB schema is ready
         memory.migrate().await?;
 
         let mut tools: HashMap<String, Box<dyn Tool>> = HashMap::new();
 
-        // Register Tools
         let nmap = NmapTool;
         tools.insert(nmap.name().to_string(), Box::new(nmap));
 
@@ -105,17 +103,9 @@ impl McpServer {
     }
 
     async fn handle_initialize(&self, _params: Option<Value>) -> Result<Value, JsonRpcError> {
-        Ok(json!({
-            "protocolVersion": "0.1.0",
-            "server": {
-                "name": "sensei-mcp",
-                "version": "0.1.0"
-            },
-            "capabilities": {
-                "tools": {},
-                "resources": {}
-            }
-        }))
+        Ok(
+            json!({ "protocolVersion": "0.1.0", "server": { "name": "sensei-mcp", "version": "0.1.0" }, "capabilities": { "tools": {}, "resources": {} } }),
+        )
     }
 
     async fn handle_tools_list(&self) -> Result<Value, JsonRpcError> {
@@ -237,7 +227,6 @@ impl McpServer {
                 message: "Missing uri".into(),
             })?;
 
-        // Collapsed if using let chains (stable since 1.88)
         if let Some(id_str) = uri.strip_prefix("sensei://knowledge/")
             && let Ok(id) = id_str.parse::<i64>()
         {
@@ -250,13 +239,9 @@ impl McpServer {
                     message: format!("Failed to read doc: {}", e),
                 })?;
 
-            return Ok(json!(@{
-                "contents": [{
-                    "uri": uri,
-                    "mimeType": "text/plain",
-                    "text": content
-                }]
-            }));
+            return Ok(
+                json!({ "contents": [{ "uri": uri, "mimeType": "text/plain", "text": content }] }),
+            );
         }
 
         Err(JsonRpcError {

@@ -8,7 +8,7 @@ async fn mcp_server_initializes_and_lists_tools() {
 
     // 2. Test Initialize
     let init_req = JsonRpcRequest {
-        _jsonrpc: "2.0".to_string(),
+        jsonrpc: "2.0".to_string(),
         id: Some(json!(1)),
         method: "initialize".to_string(),
         params: Some(json!({})),
@@ -23,7 +23,7 @@ async fn mcp_server_initializes_and_lists_tools() {
 
     // 3. Test Tools List
     let tools_req = JsonRpcRequest {
-        _jsonrpc: "2.0".to_string(),
+        jsonrpc: "2.0".to_string(),
         id: Some(json!(2)),
         method: "tools/list".to_string(),
         params: Some(json!({})),
@@ -46,7 +46,7 @@ async fn mcp_server_handles_unknown_method() {
     let server = McpServer::new("sqlite::memory:").await.unwrap();
 
     let req = JsonRpcRequest {
-        _jsonrpc: "2.0".to_string(),
+        jsonrpc: "2.0".to_string(),
         id: Some(json!(99)),
         method: "unknown/method".to_string(),
         params: None,
