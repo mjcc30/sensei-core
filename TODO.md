@@ -17,8 +17,12 @@
 - [x] **Performance:** SQLite Hyper-Tuning (12M ops/sec).
 - [x] **Learning:** RLHF Loop (Semantic Router Cache correction).
 - [ ] **Protocol Unification (MCP Client):**
-    - [ ] `McpAgent` wrapper to treat MCP servers as native agents.
+    - [x] `McpAgent` wrapper to treat MCP servers as native agents.
     - [ ] Dynamic Tool Discovery & Routing.
+- [ ] **Advanced MCP Features:**
+    - [ ] **SSE Transport:** Support HTTP/SSE for remote MCP servers.
+    - [ ] **Centralized Tool Registry:** Abstract tools from agents for better Function Calling.
+    - [ ] **Hot Reloading:** Watch `mcp_settings.json` and reload agents without restart.
 
 ## 🚧 Phase 4.5: TUI & UX (Current Focus)
 **Goal:** Deliver a "Cyberpunk" terminal experience.

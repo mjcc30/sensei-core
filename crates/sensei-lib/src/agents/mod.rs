@@ -62,14 +62,17 @@ impl Orchestrator {
 
         let response = agent.process(input).await;
 
-        // Check for DELEGATE protocol: >> DELEGATE: CATEGORY Query...
+        // Optimized Protocol v2: [DELEGATE: CATEGORY] Payload
+        // (?s) allows dot to match newlines for the payload
         static RE: OnceLock<Regex> = OnceLock::new();
-        let re = RE.get_or_init(|| Regex::new(r"(?m)^>> DELEGATE: (\w+) (.*)$").unwrap());
+        let re = RE.get_or_init(|| Regex::new(r"(?m)^[DELEGATE:\s*(\w+)]\s*(?s)(.*)$").unwrap());
 
         if let Some(caps) = re.captures(&response) {
             let target_cat_str = caps.get(1).map_or("", |m| m.as_str());
-            let target_query = caps.get(2).map_or("", |m| m.as_str());
+            let target_query = caps.get(2).map_or("", |m| m.as_str()).trim();
 
+            // Resolve category (including dynamic MCP extensions)
+            // Note: This mapping is basic. Ideally we should have a dynamic registry lookup.
             let target_cat = match target_cat_str.to_uppercase().as_str() {
                 "ACTION" => Some(AgentCategory::Action),
                 "SYSTEM" => Some(AgentCategory::System),
@@ -79,7 +82,8 @@ impl Orchestrator {
                 "CRYPTO" => Some(AgentCategory::Crypto),
                 "OSINT" => Some(AgentCategory::Osint),
                 "CASUAL" => Some(AgentCategory::Casual),
-                _ => None,
+                // Support dynamic extensions by name (e.g. [DELEGATE: FILESYSTEM])
+                name => Some(AgentCategory::Extension(name.to_lowercase())),
             };
 
             if let Some(cat) = target_cat {
@@ -87,9 +91,12 @@ impl Orchestrator {
                 let observation = self.dispatch_loop(cat, target_query, depth - 1).await;
 
                 // 2. Feed Result back to Original Agent (ReAct Loop)
+                // We use [OBSERVATION] block to match the new protocol style
                 let new_input = format!(
-                    "{}\n\n>> OBSERVATION from {}:\n{}",
-                    input, target_cat_str, observation
+                    "{}\n\n[OBSERVATION from {}}\n புகைப்படம்",
+                    input,
+                    target_cat_str,
+                    observation
                 );
                 // Call the original agent again with the new context
                 return self.dispatch_loop(category, &new_input, depth - 1).await;
