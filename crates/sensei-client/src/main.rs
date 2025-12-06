@@ -171,7 +171,7 @@ async fn handle_add(base_url: &str, path: PathBuf) -> Result<(), Box<dyn Error>>
             let stream = UnixStream::connect(socket_path).await?;
             let io = TokioIo::new(stream);
             let (mut sender, conn) = hyper::client::conn::http1::handshake(io).await?;
-            tokio::task::spawn(async move { if let Err(_) = conn.await {} });
+            tokio::task::spawn(async move { if (conn.await).is_err() {} });
 
             let req = Request::builder()
                 .method("POST")
