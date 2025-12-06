@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    },
+    "git": {
+      "command": "python3",
+      "args": ["-m", "mcp_server_git", "."]
+    }
+  }
+}

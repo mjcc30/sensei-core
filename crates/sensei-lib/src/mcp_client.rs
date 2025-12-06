@@ -40,18 +40,31 @@ pub struct McpClient {
     next_id: Mutex<u64>,
 }
 
+use std::collections::HashMap;
+
 impl McpClient {
-    pub async fn new(command: &str, args: &[&str]) -> Result<Self> {
-        let mut child = Command::new(command)
-            .args(args)
+    pub async fn new(
+        command: &str,
+
+        args: &[&str],
+
+        env: Option<HashMap<String, String>>,
+    ) -> Result<Self> {
+        let mut cmd = Command::new(command);
+
+        cmd.args(args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::inherit()) // Let stderr go to console for debugging
-            .spawn()
-            .context(format!(
-                "Failed to spawn MCP server: {} {:?}",
-                command, args
-            ))?;
+            .stderr(Stdio::inherit());
+
+        if let Some(vars) = env {
+            cmd.envs(vars);
+        }
+
+        let mut child = cmd.spawn().context(format!(
+            "Failed to spawn MCP server: {} {:?}",
+            command, args
+        ))?;
 
         let stdin = child.stdin.take().context("Failed to open stdin")?;
         let stdout = child.stdout.take().context("Failed to open stdout")?;

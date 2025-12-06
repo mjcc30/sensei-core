@@ -18,7 +18,7 @@ async fn mcp_loopback_integration() -> Result<()> {
     }
 
     // Connect to our own MCP Server
-    let client = McpClient::new(bin_path.to_str().unwrap(), &[]).await?;
+    let client = McpClient::new(bin_path.to_str().unwrap(), &[], None).await?;
 
     // 1. Initialize
     client.initialize().await?;

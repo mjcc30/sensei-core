@@ -94,7 +94,7 @@ impl Agent for ToolExecutorAgent {
     }
 
     fn category(&self) -> AgentCategory {
-        self.category
+        self.category.clone()
     }
 }
 

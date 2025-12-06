@@ -58,6 +58,6 @@ impl Agent for SpecializedAgent {
     }
 
     fn category(&self) -> AgentCategory {
-        self.category
+        self.category.clone()
     }
 }

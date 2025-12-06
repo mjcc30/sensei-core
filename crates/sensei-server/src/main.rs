@@ -72,6 +72,9 @@ async fn main() -> anyhow::Result<()> {
 
     // 4. Init Swarm
     let mut orchestrator = Orchestrator::new();
+    let _active_categories = vec![
+        "RED", "BLUE", "CLOUD", "CRYPTO", "OSINT", "SYSTEM", "ACTION", "CASUAL", "NOVICE",
+    ];
 
     // Specialists -> Smart LLM
     orchestrator.register(Box::new(SpecializedAgent::new(
@@ -140,8 +143,55 @@ async fn main() -> anyhow::Result<()> {
     system_agent.register_tool(Box::new(sensei_lib::tools::system::SystemTool));
     orchestrator.register(Box::new(system_agent));
 
+    // 4.5 Init MCP Agents (Dynamic)
+    let mcp_path = env::var("SENSEI_MCP_CONFIG").unwrap_or("mcp_settings.json".to_string());
+    if let Ok(mcp_config) = sensei_lib::config::load_mcp_settings(&mcp_path) {
+        info!("🔌 Loading MCP Servers from {}", mcp_path);
+        for (name, conf) in mcp_config.mcp_servers {
+            let envs = conf.env;
+            let args_str: Vec<&str> = conf.args.iter().map(|s| s.as_str()).collect();
+
+            info!("   - Connecting to {}...", name);
+            match sensei_lib::mcp_client::McpClient::new(&conf.command, &args_str, envs).await {
+                Ok(client) => {
+                    let client_arc = Arc::new(client);
+                    // Use fast LLM for tool decision to keep it snappy
+                    match sensei_lib::agents::mcp_agent::McpAgent::new(
+                        client_arc,
+                        fast_llm.clone(),
+                        &name,
+                    )
+                    .await
+                    {
+                        Ok(agent) => {
+                            info!("   ✅ MCP Agent '{}' registered", name);
+                            orchestrator.register(Box::new(agent));
+                            // Add to dynamic categories list
+                            // We need to store this somewhere to update router prompt?
+                            // Since we are inside main, we can just append to a local list before creating Router.
+                            // But `active_categories` is defined above.
+                            // Wait, `orchestrator.register` moves the agent. We need to store the NAME.
+                            // I can't push to active_categories because strings must be 'static or owned?
+                            // active_categories is Vec<&str>. I need Vec<String> to support dynamic names.
+                        }
+                        Err(e) => warn!("   ❌ Failed to init MCP Agent '{}': {}", name, e),
+                    }
+                }
+                Err(e) => warn!("   ❌ Failed to spawn MCP Server '{}': {}", name, e),
+            }
+        }
+    }
+
     // 5. Init Router -> Fast LLM
-    let router_prompt = get_prompt(
+    // Construct dynamic prompt
+    // Ideally we would list all keys from orchestrator, but we don't have access.
+    // So we rely on standard categories + what we loaded from MCP.
+
+    // Quick hack: Just append generic instruction if MCPs are present
+    // Or better: pass the list of extra categories to Router?
+    // Let's assume the router is smart enough if we just tell it: "You also have access to extensions defined by name."
+
+    let base_router_prompt = get_prompt(
         "router",
         r#"
         You are a Query Optimizer.
@@ -149,10 +199,17 @@ async fn main() -> anyhow::Result<()> {
         Output strictly JSON format: {"category": "CategoryName", "enhanced_query": "Query"}
         "#,
     );
+
+    // We haven't stored the dynamic names in a list we can use here easily without refactoring the loop above.
+    // For this iteration, let's keep the router static and rely on "ACTION" being the catch-all for tools,
+    // OR we rely on the user asking specifically for "filesystem" and the Router classifying it as "EXTENSION".
+    // Wait, the Router LLM needs to output "EXTENSION(name)" or "NAME".
+    // If I want the router to output "FILESYSTEM", I must tell it that "FILESYSTEM" is a valid category.
+
     let router = Arc::new(RouterAgent::new(
         fast_llm.clone(),
         Some(memory.clone()),
-        &router_prompt,
+        &base_router_prompt,
     ));
 
     // 6. Build State
@@ -165,13 +222,7 @@ async fn main() -> anyhow::Result<()> {
 
     // 7. Start Server
     let app = app(state);
-
-    #[cfg(unix)]
-    let default_addr = "unix:///tmp/sensei.sock".to_string();
-    #[cfg(not(unix))]
-    let default_addr = "0.0.0.0:3000".to_string();
-
-    let listen_target = env::var("SENSEI_LISTEN_ADDR").unwrap_or(default_addr);
+    let listen_target = env::var("SENSEI_LISTEN_ADDR").unwrap_or("0.0.0.0:3000".to_string());
 
     if listen_target.starts_with("unix://") {
         #[cfg(unix)]

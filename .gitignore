@@ -7,3 +7,4 @@
 *.db-wal
 prompts.yaml
 sensei-core-linux-x86_64/
+mcp_settings.json

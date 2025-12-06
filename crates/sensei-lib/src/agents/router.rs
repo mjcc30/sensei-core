@@ -37,16 +37,28 @@ impl RouterAgent {
             // Generate embedding for query (Fast model embedding is cheap ~20ms)
             if let Ok(embedding) = self.llm.embed(input).await {
                 // Threshold 0.1 means very close similarity
-                if let Ok(Some((cat_str, enhanced))) = mem.search_router_cache(embedding.clone(), 0.1).await {
-                    if let Ok(category) = serde_json::from_str::<AgentCategory>(&format!("\"{}\"", cat_str)) {
-                        println!("⚡ Cache Hit! Routing '{}' to {:?} (Saved ~1s)", input, category);
-                        return RoutingDecision {
-                            category,
-                            query: enhanced,
-                        };
-                    }
+                let cache_hit = mem.search_router_cache(embedding.clone(), 0.1).await;
+
+                // Try to resolve cache hit to a valid decision
+                let cached_decision = if let Ok(Some((cat_str, enhanced))) = cache_hit {
+                    serde_json::from_str::<AgentCategory>(&format!("\"{}\"", cat_str))
+                        .ok()
+                        .map(|category| (category, enhanced))
+                } else {
+                    None
+                };
+
+                if let Some((category, enhanced)) = cached_decision {
+                    println!(
+                        "⚡ Cache Hit! Routing '{}' to {:?} (Saved ~1s)",
+                        input, category
+                    );
+                    return RoutingDecision {
+                        category,
+                        query: enhanced,
+                    };
                 }
-                
+
                 // If miss, proceed to LLM but keep embedding for caching later
                 return self.classify_with_llm(input, Some(embedding)).await;
             }
@@ -74,8 +86,13 @@ impl RouterAgent {
 
                     // Cache the result asynchronously if possible (but here we await for simplicity)
                     if let (Some(mem), Some(emb)) = (&self.memory, embedding) {
-                        let cat_str = serde_json::to_string(&decision.category).unwrap().replace('"', "");
-                        if let Err(e) = mem.add_router_cache(input, &cat_str, &decision.query, emb).await {
+                        let cat_str = serde_json::to_string(&decision.category)
+                            .unwrap()
+                            .replace('"', "");
+                        if let Err(e) = mem
+                            .add_router_cache(input, &cat_str, &decision.query, emb)
+                            .await
+                        {
                             eprintln!("Failed to cache routing: {}", e);
                         }
                     }
@@ -115,16 +132,29 @@ impl RouterAgent {
             Err(_) => return,
         };
 
-        let cat_str = serde_json::to_string(&correct_category).unwrap().replace('"', "");
-        
+        let cat_str = serde_json::to_string(&correct_category)
+            .unwrap()
+            .replace('"', "");
+
         // Try to update existing cache entry first
-        match mem.update_router_cache_category(embedding.clone(), &cat_str).await {
-            Ok(true) => println!("✅ Corrected router cache for '{}' -> {:?}", input, correct_category),
+        match mem
+            .update_router_cache_category(embedding.clone(), &cat_str)
+            .await
+        {
+            Ok(true) => println!(
+                "✅ Corrected router cache for '{}' -> {:?}",
+                input, correct_category
+            ),
             Ok(false) => {
                 // If not found (or not similar enough), add as new knowledge
-                println!("➕ Learned new routing for '{}' -> {:?}", input, correct_category);
+                println!(
+                    "➕ Learned new routing for '{}' -> {:?}",
+                    input, correct_category
+                );
                 // We use the raw input as the enhanced query for simplicity in correction
-                let _ = mem.add_router_cache(input, &cat_str, input, embedding).await;
+                let _ = mem
+                    .add_router_cache(input, &cat_str, input, embedding)
+                    .await;
             }
             Err(e) => eprintln!("Failed to correct cache: {}", e),
         }

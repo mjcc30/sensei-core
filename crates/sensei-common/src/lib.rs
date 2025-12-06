@@ -67,7 +67,7 @@ pub struct AskResponse {
 }
 
 /// Categories for routing user queries to specialized agents.
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone, Copy)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum AgentCategory {
     Red,
@@ -79,6 +79,7 @@ pub enum AgentCategory {
     Action,
     Casual,
     Novice,
+    Extension(String),
     #[serde(other)]
     Unknown,
 }

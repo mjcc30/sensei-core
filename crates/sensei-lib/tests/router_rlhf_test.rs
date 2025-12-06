@@ -42,15 +42,23 @@ async fn router_learns_from_correction() -> Result<()> {
     // 4. Verify Cache Update (Should now return BLUE without asking LLM)
     // Note: Since MockLlm returns same embedding, search should hit.
     let decision2 = router.classify(query).await;
-    
-    assert_eq!(decision2.category, AgentCategory::Blue, "Router did not learn from correction!");
-    
+
+    assert_eq!(
+        decision2.category,
+        AgentCategory::Blue,
+        "Router did not learn from correction!"
+    );
+
     // 5. Verify Update (Change mind to SYSTEM)
     println!("Applying update...");
     router.correct_decision(query, AgentCategory::System).await;
-    
+
     let decision3 = router.classify(query).await;
-    assert_eq!(decision3.category, AgentCategory::System, "Router did not update existing cache!");
+    assert_eq!(
+        decision3.category,
+        AgentCategory::System,
+        "Router did not update existing cache!"
+    );
 
     Ok(())
 }

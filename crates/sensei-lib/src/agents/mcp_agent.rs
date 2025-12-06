@@ -4,7 +4,7 @@ use crate::mcp_client::McpClient;
 use async_trait::async_trait;
 use sensei_common::AgentCategory;
 use serde::Deserialize;
-use serde_json::{Value, json};
+use serde_json::Value;
 use std::sync::Arc;
 
 pub struct McpAgent {
@@ -29,8 +29,12 @@ impl McpAgent {
         // Auto-discovery of tools
         client.initialize().await?;
         let tools = client.list_tools().await?;
-        
-        println!("🔌 Connected to MCP Server '{}'. Discovered {} tools.", server_name, tools.len());
+
+        println!(
+            "🔌 Connected to MCP Server '{}'. Discovered {} tools.",
+            server_name,
+            tools.len()
+        );
 
         Ok(Self {
             client,
@@ -79,13 +83,19 @@ impl Agent for McpAgent {
         // 1. LLM decides which tool to call
         if let Some(call) = self.decide_tool(input).await {
             if call.tool_name == "none" {
-                return format!("I cannot process this request with the available tools on {}.", self.server_name);
+                return format!(
+                    "I cannot process this request with the available tools on {}.",
+                    self.server_name
+                );
             }
 
             // 2. Call MCP Tool
             match self.client.call_tool(&call.tool_name, call.arguments).await {
                 Ok(output) => {
-                    format!("✅ Tool '{}' on {} executed successfully:\n\n{}", call.tool_name, self.server_name, output)
+                    format!(
+                        "✅ Tool '{}' on {} executed successfully:\n\n{}",
+                        call.tool_name, self.server_name, output
+                    )
                 }
                 Err(e) => format!("❌ MCP Tool execution failed: {}", e),
             }
