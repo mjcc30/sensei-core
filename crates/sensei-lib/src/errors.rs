@@ -9,7 +9,7 @@ pub enum SenseiError {
     Migration(#[from] sqlx::migrate::MigrateError),
 
     #[error("LLM error: {0}")]
-    Llm(String), 
+    Llm(String),
 
     #[error("Configuration error: {0}")]
     Config(#[from] serde_yaml::Error),

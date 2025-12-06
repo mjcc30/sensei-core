@@ -2,9 +2,9 @@ use async_trait::async_trait;
 use sensei_common::AgentCategory;
 use sensei_lib::agents::Agent;
 use sensei_lib::agents::action::ToolExecutorAgent;
+use sensei_lib::errors::SenseiError;
 use sensei_lib::llm::Llm;
 use sensei_lib::tools::Tool;
-use sensei_lib::errors::SenseiError;
 use std::sync::{Arc, Mutex};
 
 struct MockTool {
@@ -43,13 +43,13 @@ impl Llm for MockLlm {
 #[tokio::test]
 async fn tool_agent_executes_correct_tool() {
     let tool_called = Arc::new(Mutex::new(false));
-    
+
     let llm = Arc::new(MockLlm {
         response: r#"{"tool_name": "mock_tool", "argument": "run"}"#.to_string(),
     });
 
     let mut agent = ToolExecutorAgent::new(llm, AgentCategory::Action);
-    
+
     agent.register_tool(Box::new(MockTool {
         name: "mock_tool".to_string(),
         was_called: tool_called.clone(),
@@ -57,7 +57,10 @@ async fn tool_agent_executes_correct_tool() {
 
     let response = agent.process("Run mock tool").await;
 
-    assert!(*tool_called.lock().unwrap(), "Tool should have been executed");
+    assert!(
+        *tool_called.lock().unwrap(),
+        "Tool should have been executed"
+    );
     assert!(response.contains("Success"));
 }
 

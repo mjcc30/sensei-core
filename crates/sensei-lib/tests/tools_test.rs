@@ -6,11 +6,11 @@ use sensei_lib::tools::system::SystemTool;
 async fn nmap_sanitization_works() {
     let tool = NmapTool;
     // Valid inputs
-    // We expect these to fail execution because nmap is likely not installed in CI/Test env, 
+    // We expect these to fail execution because nmap is likely not installed in CI/Test env,
     // BUT we expect them to pass sanitization.
     // However, the tool returns Err if execution fails.
     // So we check the error message.
-    
+
     let res = tool.execute("localhost").await;
     // It might succeed if nmap is there, or fail with "nmap not found".
     // But it should NOT fail with "Invalid characters".
@@ -37,5 +37,9 @@ async fn system_allowlist_works() {
     // Disallowed commands
     let res = tool.execute("reboot").await;
     assert!(res.is_err());
-    assert!(res.unwrap_err().to_string().contains("Unknown or disallowed"));
+    assert!(
+        res.unwrap_err()
+            .to_string()
+            .contains("Unknown or disallowed")
+    );
 }

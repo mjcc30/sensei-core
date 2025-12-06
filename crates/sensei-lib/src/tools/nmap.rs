@@ -25,7 +25,8 @@ impl Tool for NmapTool {
             || target.contains(')')
         {
             return Err(SenseiError::Tool(
-                "Invalid characters in target name. Please provide a valid hostname or IP address.".into()
+                "Invalid characters in target name. Please provide a valid hostname or IP address."
+                    .into(),
             ));
         }
 
@@ -40,7 +41,10 @@ impl Tool for NmapTool {
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(SenseiError::Tool(format!("Nmap command failed: {}", stderr)));
+            return Err(SenseiError::Tool(format!(
+                "Nmap command failed: {}",
+                stderr
+            )));
         }
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())

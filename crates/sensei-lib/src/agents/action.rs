@@ -140,14 +140,14 @@ mod tests {
     #[tokio::test]
     async fn tool_agent_executes_correct_tool() {
         let tool_called = Arc::new(Mutex::new(false));
-        
+
         // Mock LLM response to force tool selection
         let llm = Arc::new(MockLlm {
             response: r###"{"tool_name": "mock_tool", "argument": "run"}"###.to_string(),
         });
 
         let mut agent = ToolExecutorAgent::new(llm, AgentCategory::Action);
-        
+
         agent.register_tool(Box::new(MockTool {
             name: "mock_tool".to_string(),
             was_called: tool_called.clone(),
@@ -155,7 +155,10 @@ mod tests {
 
         let response = agent.process("Run mock tool").await;
 
-        assert!(*tool_called.lock().unwrap(), "Tool should have been executed");
+        assert!(
+            *tool_called.lock().unwrap(),
+            "Tool should have been executed"
+        );
         assert!(response.contains("Success"));
     }
 

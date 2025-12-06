@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use sensei_common::AgentCategory;
 use sensei_lib::agents::Agent;
 use sensei_lib::agents::specialists::SpecializedAgent;
-use sensei_lib::llm::Llm;
 use sensei_lib::errors::SenseiError;
+use sensei_lib::llm::Llm;
 use std::sync::{Arc, Mutex};
 
 struct MockLlm {
@@ -44,10 +44,10 @@ async fn specialist_uses_master_prompt_in_raw_mode() {
         last_prompt: Mutex::new(String::new()),
     });
     let agent = SpecializedAgent::new(
-        llm.clone(), 
-        AgentCategory::Red, 
-        "SYSTEM PROMPT", 
-        Some("MASTER PROMPT".to_string())
+        llm.clone(),
+        AgentCategory::Red,
+        "SYSTEM PROMPT",
+        Some("MASTER PROMPT".to_string()),
     );
 
     agent.process("Query --raw").await;

@@ -56,7 +56,10 @@ impl LlmClient {
 impl Llm for LlmClient {
     async fn embed(&self, text: &str) -> Result<Vec<f32>, SenseiError> {
         let req = EmbedRequest::new(text.to_string());
-        let response = self.client.exec_embed(MODEL_EMBEDDING, req, None).await
+        let response = self
+            .client
+            .exec_embed(MODEL_EMBEDDING, req, None)
+            .await
             .map_err(|e| SenseiError::Llm(e.to_string()))?;
 
         if let Some(embedding) = response.embeddings.first() {
@@ -67,10 +70,11 @@ impl Llm for LlmClient {
     }
 
     async fn generate_raw(&self, prompt: &str) -> Result<String, SenseiError> {
-        let api_key = env::var("GEMINI_API_KEY").map_err(|e| SenseiError::Config(serde_yaml::Error::custom(e.to_string())))?;
+        let api_key = env::var("GEMINI_API_KEY")
+            .map_err(|e| SenseiError::Config(serde_yaml::Error::custom(e.to_string())))?;
         // Need to wrap env error or change Config error type. Using generic Llm error for now.
         // Actually map_err(|_| SenseiError::Llm("GEMINI_API_KEY not set".into()))
-        
+
         // Resolve model name if "auto"
         let model_name = if self.model_config == "auto" {
             MODEL_CHAT_DEFAULT
@@ -96,21 +100,33 @@ impl Llm for LlmClient {
         });
 
         let client = reqwest::Client::new();
-        let res = client.post(&url).json(&body).send().await
+        let res = client
+            .post(&url)
+            .json(&body)
+            .send()
+            .await
             .map_err(|e| SenseiError::Llm(e.to_string()))?;
 
         if !res.status().is_success() {
             let error_text = res.text().await.unwrap_or_default();
-            return Err(SenseiError::Llm(format!("Gemini REST Error: {}", error_text)));
+            return Err(SenseiError::Llm(format!(
+                "Gemini REST Error: {}",
+                error_text
+            )));
         }
 
-        let json: Value = res.json().await
+        let json: Value = res
+            .json()
+            .await
             .map_err(|e| SenseiError::Llm(e.to_string()))?;
-            
+
         if let Some(text) = json.pointer("/candidates/0/content/parts/0/text") {
             Ok(text.as_str().unwrap_or("").to_string())
         } else {
-            Err(SenseiError::Llm(format!("No content generated (Blocked?): {:?}", json)))
+            Err(SenseiError::Llm(format!(
+                "No content generated (Blocked?): {:?}",
+                json
+            )))
         }
     }
 
@@ -148,7 +164,10 @@ impl Llm for LlmClient {
             }
         }
 
-        Err(SenseiError::Llm(format!("All Gemini models failed. Last error: {:?}", last_error)))
+        Err(SenseiError::Llm(format!(
+            "All Gemini models failed. Last error: {:?}",
+            last_error
+        )))
     }
 }
 

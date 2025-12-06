@@ -1,8 +1,8 @@
 use dotenvy::dotenv;
 use sensei_lib::memory::MemoryStore;
+use sensei_lib::tools::Tool;
 use sensei_lib::tools::nmap::NmapTool;
 use sensei_lib::tools::system::SystemTool;
-use sensei_lib::tools::Tool;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -57,7 +57,7 @@ struct ResourceDescription {
 // --- Server State ---
 
 struct McpServer {
-    // Memory is kept for future RAG implementation. 
+    // Memory is kept for future RAG implementation.
     // We use it in initialization to ensure DB connection is valid.
     memory: MemoryStore,
     tools: HashMap<String, Box<dyn Tool>>,
@@ -70,11 +70,11 @@ impl McpServer {
         memory.migrate().await?;
 
         let mut tools: HashMap<String, Box<dyn Tool>> = HashMap::new();
-        
+
         // Register Tools
         let nmap = NmapTool;
         tools.insert(nmap.name().to_string(), Box::new(nmap));
-        
+
         let system = SystemTool;
         tools.insert(system.name().to_string(), Box::new(system));
 
@@ -144,8 +144,8 @@ impl McpServer {
                 input_schema: json!({
                     "type": "object",
                     "properties": {
-                        "command": { 
-                            "type": "string", 
+                        "command": {
+                            "type": "string",
                             "enum": ["uptime", "disk", "memory", "whoami", "date"],
                             "description": "Diagnostic command to run"
                         }
@@ -159,55 +159,101 @@ impl McpServer {
     }
 
     async fn handle_tools_call(&self, params: Option<Value>) -> Result<Value, JsonRpcError> {
-        let params = params.ok_or(JsonRpcError { code: -32602, message: "Missing params".into() })?;
-        
-        let name = params.get("name").and_then(|v| v.as_str())
-            .ok_or(JsonRpcError { code: -32602, message: "Missing tool name".into() })?;
-        
+        let params = params.ok_or(JsonRpcError {
+            code: -32602,
+            message: "Missing params".into(),
+        })?;
+
+        let name = params
+            .get("name")
+            .and_then(|v| v.as_str())
+            .ok_or(JsonRpcError {
+                code: -32602,
+                message: "Missing tool name".into(),
+            })?;
+
         let arguments = params.get("arguments").cloned().unwrap_or(json!({}));
 
         if let Some(tool) = self.tools.get(name) {
             let arg_str = if name == "nmap" {
-                arguments.get("target").and_then(|v| v.as_str()).unwrap_or("").to_string()
+                arguments
+                    .get("target")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string()
             } else if name == "system_diagnostic" {
-                arguments.get("command").and_then(|v| v.as_str()).unwrap_or("").to_string()
+                arguments
+                    .get("command")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string()
             } else {
-                return Err(JsonRpcError { code: -32602, message: "Unknown tool signature".into() });
+                return Err(JsonRpcError {
+                    code: -32602,
+                    message: "Unknown tool signature".into(),
+                });
             };
 
             match tool.execute(&arg_str).await {
                 Ok(output) => Ok(json!({ "content": [{ "type": "text", "text": output }] })),
-                Err(e) => Err(JsonRpcError { code: -32000, message: e.to_string() }),
+                Err(e) => Err(JsonRpcError {
+                    code: -32000,
+                    message: e.to_string(),
+                }),
             }
         } else {
-            Err(JsonRpcError { code: -32601, message: format!("Tool {} not found", name) })
+            Err(JsonRpcError {
+                code: -32601,
+                message: format!("Tool {} not found", name),
+            })
         }
     }
 
     async fn handle_resources_list(&self) -> Result<Value, JsonRpcError> {
-        let docs = self.memory.list_documents().await
-            .map_err(|e| JsonRpcError { code: -32603, message: e.to_string() })?;
+        let docs = self
+            .memory
+            .list_documents()
+            .await
+            .map_err(|e| JsonRpcError {
+                code: -32603,
+                message: e.to_string(),
+            })?;
 
-        let resources: Vec<ResourceDescription> = docs.into_iter().map(|(id, snippet)| {
-            ResourceDescription {
+        let resources: Vec<ResourceDescription> = docs
+            .into_iter()
+            .map(|(id, snippet)| ResourceDescription {
                 uri: format!("sensei://knowledge/{}", id),
                 name: format!("Document #{} - {}...", id, snippet.replace('\n', " ")),
                 mime_type: Some("text/plain".to_string()),
-            }
-        }).collect();
+            })
+            .collect();
 
         Ok(json!({ "resources": resources }))
     }
 
     async fn handle_resources_read(&self, params: Option<Value>) -> Result<Value, JsonRpcError> {
-        let params = params.ok_or(JsonRpcError { code: -32602, message: "Missing params".into() })?;
-        let uri = params.get("uri").and_then(|v| v.as_str())
-            .ok_or(JsonRpcError { code: -32602, message: "Missing uri".into() })?;
+        let params = params.ok_or(JsonRpcError {
+            code: -32602,
+            message: "Missing params".into(),
+        })?;
+        let uri = params
+            .get("uri")
+            .and_then(|v| v.as_str())
+            .ok_or(JsonRpcError {
+                code: -32602,
+                message: "Missing uri".into(),
+            })?;
 
         if let Some(id_str) = uri.strip_prefix("sensei://knowledge/") {
             if let Ok(id) = id_str.parse::<i64>() {
-                let content = self.memory.get_document(id).await
-                    .map_err(|e| JsonRpcError { code: -32603, message: format!("Failed to read doc: {}", e) })?;
+                let content = self
+                    .memory
+                    .get_document(id)
+                    .await
+                    .map_err(|e| JsonRpcError {
+                        code: -32603,
+                        message: format!("Failed to read doc: {}", e),
+                    })?;
 
                 return Ok(json!({
                     "contents": [{
@@ -219,14 +265,17 @@ impl McpServer {
             }
         }
 
-        Err(JsonRpcError { code: -32602, message: "Resource not found or invalid URI".into() })
+        Err(JsonRpcError {
+            code: -32602,
+            message: "Resource not found or invalid URI".into(),
+        })
     }
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv().ok();
-    
+
     tracing_subscriber::fmt()
         .with_writer(std::io::stderr)
         .init();
@@ -240,8 +289,10 @@ async fn main() -> anyhow::Result<()> {
     let mut lines = stdin.lock().lines();
 
     while let Some(Ok(line)) = lines.next() {
-        if line.trim().is_empty() { continue; }
-        
+        if line.trim().is_empty() {
+            continue;
+        }
+
         let req: JsonRpcRequest = match serde_json::from_str(&line) {
             Ok(r) => r,
             Err(e) => {
@@ -254,7 +305,7 @@ async fn main() -> anyhow::Result<()> {
         tokio::spawn(async move {
             let res = server_clone.handle_request(req).await;
             let json = serde_json::to_string(&res).unwrap();
-            println!("{}", json); 
+            println!("{}", json);
         });
     }
 

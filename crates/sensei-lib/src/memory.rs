@@ -99,7 +99,12 @@ impl MemoryStore {
 
     // --- Messages ---
 
-    pub async fn add_message(&self, session_id: &str, role: &str, content: &str) -> Result<String, SenseiError> {
+    pub async fn add_message(
+        &self,
+        session_id: &str,
+        role: &str,
+        content: &str,
+    ) -> Result<String, SenseiError> {
         let id = Uuid::new_v4().to_string();
         sqlx::query!(
             "INSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)",
@@ -126,7 +131,11 @@ impl MemoryStore {
 
     // --- RAG / Vectors ---
 
-    pub async fn add_document(&self, content: &str, embedding: Vec<f32>) -> Result<(), SenseiError> {
+    pub async fn add_document(
+        &self,
+        content: &str,
+        embedding: Vec<f32>,
+    ) -> Result<(), SenseiError> {
         let mut tx = self.pool.begin().await?;
 
         use sqlx::Row;
@@ -181,10 +190,10 @@ impl MemoryStore {
             .fetch_all(&self.pool)
             .await?;
 
-        let results: Vec<(i64, String)> = rows.iter().map(|row| (
-            row.get("id"),
-            row.get::<String, _>("snippet")
-        )).collect();
+        let results: Vec<(i64, String)> = rows
+            .iter()
+            .map(|row| (row.get("id"), row.get::<String, _>("snippet")))
+            .collect();
         Ok(results)
     }
 
@@ -194,7 +203,7 @@ impl MemoryStore {
             .bind(id)
             .fetch_one(&self.pool)
             .await?;
-        
+
         Ok(row.get("content"))
     }
 }

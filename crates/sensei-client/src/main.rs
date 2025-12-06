@@ -7,8 +7,8 @@ use std::path::PathBuf;
 
 // HTTP / UDS handling
 use http_body_util::{BodyExt, Full};
-use hyper::body::Bytes;
 use hyper::Request;
+use hyper::body::Bytes;
 use hyper_util::rt::TokioIo;
 use tokio::net::UnixStream;
 
@@ -47,7 +47,7 @@ enum Commands {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
-    
+
     // Determine default URL based on OS
     let default_url = if cfg!(unix) {
         "unix:///tmp/sensei.sock".to_string()
@@ -95,7 +95,10 @@ async fn print_ask(url: &str, prompt: &str) -> Result<(), Box<dyn Error>> {
 }
 
 // Generic sender that switches between UDS (Hyper) and TCP (Reqwest)
-pub async fn send_ask_request(base_url: &str, prompt: &str) -> Result<String, Box<dyn Error + Send + Sync>> {
+pub async fn send_ask_request(
+    base_url: &str,
+    prompt: &str,
+) -> Result<String, Box<dyn Error + Send + Sync>> {
     let req_body = AskRequest {
         prompt: prompt.to_string(),
     };
@@ -109,7 +112,7 @@ pub async fn send_ask_request(base_url: &str, prompt: &str) -> Result<String, Bo
             let io = TokioIo::new(stream);
 
             let (mut sender, conn) = hyper::client::conn::http1::handshake(io).await?;
-            
+
             tokio::task::spawn(async move {
                 if let Err(err) = conn.await {
                     eprintln!("Connection failed: {:?}", err);
@@ -124,7 +127,7 @@ pub async fn send_ask_request(base_url: &str, prompt: &str) -> Result<String, Bo
                 .body(Full::new(Bytes::from(json_body)))?;
 
             let res = sender.send_request(req).await?;
-            
+
             if !res.status().is_success() {
                 return Err(format!("Server Error: {}", res.status()).into());
             }
@@ -141,7 +144,8 @@ pub async fn send_ask_request(base_url: &str, prompt: &str) -> Result<String, Bo
         // Standard HTTP via Reqwest
         let client = reqwest::Client::new();
         let url = format!("{}/v1/ask", base_url.trim_end_matches('/'));
-        let res = client.post(&url)
+        let res = client
+            .post(&url)
             .header("Content-Type", "application/json")
             .body(json_body)
             .send()
@@ -177,7 +181,7 @@ async fn handle_add(base_url: &str, path: PathBuf) -> Result<(), Box<dyn Error>>
                 .body(Full::new(Bytes::from(json_body)))?;
 
             let res = sender.send_request(req).await?;
-            
+
             if res.status().is_success() {
                 println!("✅ Document added.");
             } else {
@@ -192,12 +196,13 @@ async fn handle_add(base_url: &str, path: PathBuf) -> Result<(), Box<dyn Error>>
     } else {
         let client = reqwest::Client::new();
         let url = format!("{}/v1/knowledge/add", base_url.trim_end_matches('/'));
-        let res = client.post(&url)
+        let res = client
+            .post(&url)
             .header("Content-Type", "application/json")
             .body(json_body)
             .send()
             .await?;
-            
+
         if res.status().is_success() {
             println!("✅ Document added.");
         } else {

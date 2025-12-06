@@ -161,7 +161,7 @@ async fn main() -> anyhow::Result<()> {
 
     // 7. Start Server
     let app = app(state);
-    
+
     #[cfg(unix)]
     let default_addr = "unix:///tmp/sensei.sock".to_string();
     #[cfg(not(unix))]
@@ -176,13 +176,14 @@ async fn main() -> anyhow::Result<()> {
             if std::fs::metadata(path).is_ok() {
                 std::fs::remove_file(path).context("Failed to remove existing socket file")?;
             }
-            
-            let listener = tokio::net::UnixListener::bind(path).context("Failed to bind to Unix socket")?;
-            
+
+            let listener =
+                tokio::net::UnixListener::bind(path).context("Failed to bind to Unix socket")?;
+
             // Set permissions to 700 (Owner only) for security
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))?;
-            
+
             info!("🚀 Sensei Server listening on Unix Socket: {}", path);
             axum::serve(listener, app).await.context("Server crashed")?;
         }
@@ -195,7 +196,10 @@ async fn main() -> anyhow::Result<()> {
             .await
             .context(format!("Failed to bind to {}", listen_target))?;
 
-        info!("🚀 Sensei Server running on http://{} (Swarm Mode)", listen_target);
+        info!(
+            "🚀 Sensei Server running on http://{} (Swarm Mode)",
+            listen_target
+        );
         info!("⚡ Fast Model: {}", MODEL_CHAT_FAST);
         info!("🧠 Smart Model: {}", MODEL_CHAT_SMART);
 

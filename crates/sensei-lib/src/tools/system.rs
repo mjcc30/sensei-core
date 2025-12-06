@@ -19,20 +19,24 @@ impl Tool for SystemTool {
             "memory" => ("free", vec!["-h"]),
             "whoami" => ("whoami", vec![]),
             "date" => ("date", vec![]),
-            _ => return Err(SenseiError::Tool(format!(
-                "Unknown or disallowed diagnostic command: '{}'. Allowed: uptime, disk, memory, whoami, date",
-                command_key
-            ))),
+            _ => {
+                return Err(SenseiError::Tool(format!(
+                    "Unknown or disallowed diagnostic command: '{}'. Allowed: uptime, disk, memory, whoami, date",
+                    command_key
+                )));
+            }
         };
 
-        let output = Command::new(cmd)
-            .args(args)
-            .output()
-            .map_err(|e| SenseiError::Tool(format!("Failed to run system command '{}': {}", cmd, e)))?;
+        let output = Command::new(cmd).args(args).output().map_err(|e| {
+            SenseiError::Tool(format!("Failed to run system command '{}': {}", cmd, e))
+        })?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            return Err(SenseiError::Tool(format!("Command '{}' failed: {}", cmd, stderr)));
+            return Err(SenseiError::Tool(format!(
+                "Command '{}' failed: {}",
+                cmd, stderr
+            )));
         }
 
         // Truncate huge outputs to protect LLM context
