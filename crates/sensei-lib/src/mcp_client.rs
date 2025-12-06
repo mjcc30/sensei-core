@@ -1,14 +1,11 @@
 use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use std::collections::HashMap;
 use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{Child, Command};
 use tokio::sync::Mutex;
-
-// Reuse types from sensei-common if possible, or define local protocol types
-// Since sensei-common types are specific to Sensei API, we'll define generic JSON-RPC here
-// or move generic JSON-RPC types to sensei-common later. For now, local is fine.
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct JsonRpcRequest {
@@ -40,18 +37,13 @@ pub struct McpClient {
     next_id: Mutex<u64>,
 }
 
-use std::collections::HashMap;
-
 impl McpClient {
     pub async fn new(
         command: &str,
-
         args: &[&str],
-
         env: Option<HashMap<String, String>>,
     ) -> Result<Self> {
         let mut cmd = Command::new(command);
-
         cmd.args(args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -93,25 +85,18 @@ impl McpClient {
         };
 
         let mut json = serde_json::to_string(&req)?;
-        json.push('\n'); // JSON-RPC over Stdio usually implies line-delimited JSON
+        json.push('\n');
 
-        // Write Request
         {
             let mut writer = self.writer.lock().await;
             writer.write_all(json.as_bytes()).await?;
             writer.flush().await?;
         }
 
-        // Read Response
-        // Note: This is a simplified synchronous request-response model (blocking the reader).
-        // A full implementation would have a background reader loop dispatching responses by ID.
-        // For simple usage (one request at a time), this works.
         {
             let mut reader = self.reader.lock().await;
             let mut line = String::new();
 
-            // Loop to skip logs or non-JSON lines if any leak to stdout (though they shouldn't)
-            // or to handle notifications.
             loop {
                 line.clear();
                 let bytes = reader.read_line(&mut line).await?;
@@ -126,12 +111,8 @@ impl McpClient {
                         }
                         return Ok(resp.result.unwrap_or(Value::Null));
                     } else {
-                        // Ignore mismatched IDs or notifications for now
                         continue;
                     }
-                } else {
-                    // Not valid JSON or not a response, maybe a log line?
-                    // tracing::debug!("Ignored MCP output: {}", line);
                 }
             }
         }
@@ -139,8 +120,6 @@ impl McpClient {
 
     pub async fn initialize(&self) -> Result<()> {
         let _res = self.send_request("initialize", Some(json!({ "protocolVersion": "0.1.0", "client": { "name": "sensei-client", "version": "0.1.0" }, "capabilities": {} }))).await?;
-
-        // Optionally check protocol version in response
         Ok(())
     }
 
@@ -162,8 +141,6 @@ impl McpClient {
             )
             .await?;
 
-        // Extract content text
-        // Response format: { "content": [{ "type": "text", "text": "..." }] }
         if let Some(content) = res.get("content").and_then(|c| c.as_array()) {
             let mut output = String::new();
             for part in content {
@@ -173,8 +150,68 @@ impl McpClient {
             }
             Ok(output)
         } else {
-            // Fallback: return raw JSON if structure doesn't match standard
             Ok(serde_json::to_string_pretty(&res)?)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Mock MCP Server using Python (available in most envs)
+    // Reads JSON-RPC line, replies with static response
+    const MOCK_PY: &str = r#"
+import sys, json
+
+while True:
+    line = sys.stdin.readline()
+    if not line: break
+    try:
+        req = json.loads(line)
+        method = req.get("method")
+        msgid = req.get("id")
+        
+        if method == "initialize":
+            res = {"jsonrpc": "2.0", "id": msgid, "result": {"protocolVersion": "0.1.0", "capabilities": {}}}
+        elif method == "tools/list":
+            res = {"jsonrpc": "2.0", "id": msgid, "result": {"tools": [{"name": "mock_tool"}]}}
+        elif method == "tools/call":
+            res = {"jsonrpc": "2.0", "id": msgid, "result": {"content": [{"type": "text", "text": "Mock Success"}]}}
+        else:
+            res = {}
+            
+        print(json.dumps(res), flush=True)
+    except:
+        pass
+"#;
+
+    #[tokio::test]
+    async fn test_mcp_client_protocol() -> Result<()> {
+        // Only run if python3 is available
+        if std::process::Command::new("python3")
+            .arg("--version")
+            .output()
+            .is_err()
+        {
+            println!("Skipping test: python3 not found");
+            return Ok(());
+        }
+
+        let client = McpClient::new("python3", &["-c", MOCK_PY], None).await?;
+
+        // 1. Initialize
+        client.initialize().await?;
+
+        // 2. List Tools
+        let tools = client.list_tools().await?;
+        assert_eq!(tools.len(), 1);
+        assert_eq!(tools[0]["name"], "mock_tool");
+
+        // 3. Call Tool
+        let output = client.call_tool("mock_tool", json!({})).await?;
+        assert_eq!(output, "Mock Success");
+
+        Ok(())
     }
 }

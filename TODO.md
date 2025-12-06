@@ -9,22 +9,19 @@
 - [x] **RAG (Memory):** SQLite Persistence, Vector Store (`sqlite-vec`).
 - [x] **Integration:** GitHub CI/CD, Blackfin OS support.
 
-## 🚀 Phase 4: Modern Interfaces & Protocols (In Progress)
+## ✅ Phase 4: Modern Interfaces & Protocols (Completed)
 **Goal:** Enhance user experience and interoperability.
 
 - [x] **Architecture Refactor:** Modular `sensei-lib` + `server` + `client` + `mcp` crate.
 - [x] **Security:** Unix Domain Sockets (UDS) support.
 - [x] **Performance:** SQLite Hyper-Tuning (12M ops/sec).
 - [x] **Learning:** RLHF Loop (Semantic Router Cache correction).
-- [ ] **Protocol Unification (MCP Client):**
+- [x] **Protocol Unification (MCP Client):**
     - [x] `McpAgent` wrapper to treat MCP servers as native agents.
-    - [ ] Dynamic Tool Discovery & Routing.
-- [ ] **Advanced MCP Features:**
-    - [ ] **SSE Transport:** Support HTTP/SSE for remote MCP servers.
-    - [ ] **Centralized Tool Registry:** Abstract tools from agents for better Function Calling.
-    - [ ] **Hot Reloading:** Watch `mcp_settings.json` and reload agents without restart.
+    - [x] Dynamic Tool Discovery & Routing via `mcp_settings.json`.
+- [x] **Advanced A2A Protocol:** `[DELEGATE: EXTENSION]` recursive loop implemented.
 
-## 🚧 Phase 4.5: TUI & UX (Current Focus)
+## 🚧 Phase 4.5: TUI & UX (Next)
 **Goal:** Deliver a "Cyberpunk" terminal experience.
 
 - [ ] **TUI (Terminal User Interface):**
@@ -38,6 +35,10 @@
 
 - [ ] **Local Intelligence (Ollama):** Fallback to local uncensored models (Llama 3, Mistral) for God Mode commands.
 - [ ] **Byzantine Consensus:** Multi-agent voting system.
+- [ ] **Advanced MCP Features:**
+    - [ ] **SSE Transport:** Support HTTP/SSE for remote MCP servers.
+    - [ ] **Centralized Tool Registry:** Abstract tools from agents for better Function Calling.
+    - [ ] **Hot Reloading:** Watch `mcp_settings.json` and reload agents without restart.
 - [ ] **Security Model:** MAC/ABAC implementation.
     - [ ] Data Classification (Confidential/Secret tags).
     - [ ] Agent Clearance levels.
