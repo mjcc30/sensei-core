@@ -244,25 +244,26 @@ impl McpServer {
                 message: "Missing uri".into(),
             })?;
 
-        if let Some(id_str) = uri.strip_prefix("sensei://knowledge/") {
-            if let Ok(id) = id_str.parse::<i64>() {
-                let content = self
-                    .memory
-                    .get_document(id)
-                    .await
-                    .map_err(|e| JsonRpcError {
-                        code: -32603,
-                        message: format!("Failed to read doc: {}", e),
-                    })?;
+        // Collapsed if using let chains (stable since 1.88)
+        if let Some(id_str) = uri.strip_prefix("sensei://knowledge/") 
+           && let Ok(id) = id_str.parse::<i64>() 
+        {
+            let content = self
+                .memory
+                .get_document(id)
+                .await
+                .map_err(|e| JsonRpcError {
+                    code: -32603,
+                    message: format!("Failed to read doc: {}", e),
+                })?;
 
-                return Ok(json!({
-                    "contents": [{
-                        "uri": uri,
-                        "mimeType": "text/plain",
-                        "text": content
-                    }]
-                }));
-            }
+            return Ok(json!({
+                "contents": [{
+                    "uri": uri,
+                    "mimeType": "text/plain",
+                    "text": content
+                }]
+            }));
         }
 
         Err(JsonRpcError {
