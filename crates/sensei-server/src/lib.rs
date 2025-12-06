@@ -1,19 +1,17 @@
 use axum::{
     Json, Router,
-    extract::{Request, State},
+    extract::State,
     http::{HeaderMap, StatusCode},
-    middleware::{self, Next},
-    response::{IntoResponse, Response},
+    response::IntoResponse,
     routing::{get, post},
 };
-use sensei_common::{AskRequest, AskResponse, Health};
+use sensei_common::{AgentCategory, AskRequest, AskResponse, Health};
 use sensei_lib::agents::Orchestrator;
 use sensei_lib::agents::router::RouterAgent;
 use sensei_lib::llm::Llm;
 use sensei_lib::memory::MemoryStore;
 use serde::Deserialize;
 use serde_json::{Value, json};
-use std::env;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -25,39 +23,13 @@ pub struct AppState {
 }
 
 pub fn app(state: AppState) -> Router {
-    // Public routes
-    let public_routes = Router::new().route("/health", get(health_check));
-
-    // Protected routes
-    let protected_routes = Router::new()
+    Router::new()
+        .route("/health", get(health_check))
         .route("/v1/ask", post(ask_handler))
         .route("/v1/debug/classify", post(debug_classify_handler))
         .route("/v1/knowledge/add", post(add_document_handler))
-        .layer(middleware::from_fn(auth_middleware));
-
-    Router::new()
-        .merge(public_routes)
-        .merge(protected_routes)
+        .route("/v1/feedback/correct", post(correct_routing_handler)) // New Endpoint
         .with_state(state)
-}
-
-async fn auth_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
-    let auth_token = env::var("SENSEI_AUTH_TOKEN").unwrap_or_default();
-
-    // If no token configured, allow all (Development mode)
-    if auth_token.is_empty() {
-        return Ok(next.run(req).await);
-    }
-
-    let auth_header = req
-        .headers()
-        .get("Authorization")
-        .and_then(|header| header.to_str().ok());
-
-    match auth_header {
-        Some(header) if header == format!("Bearer {}", auth_token) => Ok(next.run(req).await),
-        _ => Err(StatusCode::UNAUTHORIZED),
-    }
 }
 
 async fn health_check() -> Json<Health> {
@@ -69,6 +41,29 @@ async fn health_check() -> Json<Health> {
 #[derive(Deserialize)]
 struct AddDocumentRequest {
     content: String,
+}
+
+#[derive(Deserialize)]
+struct CorrectionRequest {
+    query: String,
+    correct_category: AgentCategory,
+}
+
+async fn correct_routing_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<CorrectionRequest>,
+) -> impl IntoResponse {
+    state
+        .router
+        .correct_decision(&payload.query, payload.correct_category)
+        .await;
+
+    (
+        StatusCode::OK,
+        Json(json!({
+            "status": "Feedback received. Router updated."
+        })),
+    )
 }
 
 async fn add_document_handler(
@@ -168,7 +163,10 @@ async fn ask_handler(
     let final_prompt = if !context_docs.is_empty() {
         println!("📚 RAG: Found {} relevant documents.", context_docs.len());
         format!(
-            "RELEVANT KNOWLEDGE:\n{}\n\nUSER QUERY:\n{}",
+            "RELEVANT KNOWLEDGE:\n{}
+
+USER QUERY:
+{}",
             context_docs.join("\n---\n"),
             decision.query
         )

@@ -206,6 +206,114 @@ impl MemoryStore {
 
         Ok(row.get("content"))
     }
+
+    // --- Router Semantic Cache ---
+
+    pub async fn add_router_cache(
+        &self,
+        query_text: &str,
+        category: &str,
+        enhanced_query: &str,
+        embedding: Vec<f32>,
+    ) -> Result<(), SenseiError> {
+        let mut tx = self.pool.begin().await?;
+
+        use sqlx::Row;
+        let row = sqlx::query(
+            "INSERT INTO router_cache (query_text, category, enhanced_query) VALUES (?, ?, ?) RETURNING id",
+        )
+        .bind(query_text)
+        .bind(category)
+        .bind(enhanced_query)
+        .fetch_one(&mut *tx)
+        .await?;
+
+        let id: i64 = row.get("id");
+        let vector_bytes = f32_vec_to_bytes(&embedding);
+
+        sqlx::query("INSERT INTO vec_router_cache (rowid, embedding) VALUES (?, ?)")
+            .bind(id)
+            .bind(vector_bytes)
+            .execute(&mut *tx)
+            .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
+
+    pub async fn search_router_cache(
+        &self,
+        query_embedding: Vec<f32>,
+        similarity_threshold: f32,
+    ) -> Result<Option<(String, String)>, SenseiError> {
+        let vector_bytes = f32_vec_to_bytes(&query_embedding);
+
+        // Search for nearest neighbor
+        let row = sqlx::query(
+            r#"
+            SELECT c.category, c.enhanced_query, v.distance
+            FROM vec_router_cache v
+            JOIN router_cache c ON v.rowid = c.id
+            WHERE v.embedding MATCH ? AND k = 1
+            ORDER BY v.distance ASC
+            "#,
+        )
+        .bind(vector_bytes)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        if let Some(r) = row {
+            use sqlx::Row;
+            let distance: f32 = r.get("distance");
+
+            if distance < similarity_threshold {
+                let category: String = r.get("category");
+                let enhanced: String = r.get("enhanced_query");
+                return Ok(Some((category, enhanced)));
+            }
+        }
+
+        Ok(None)
+    }
+
+    pub async fn update_router_cache_category(
+        &self,
+        query_embedding: Vec<f32>,
+        new_category: &str,
+    ) -> Result<bool, SenseiError> {
+        let vector_bytes = f32_vec_to_bytes(&query_embedding);
+
+        // Find nearest neighbor to update
+        let row = sqlx::query(
+            r#"
+            SELECT rowid, distance
+            FROM vec_router_cache
+            WHERE embedding MATCH ? AND k = 1
+            ORDER BY distance ASC
+            "#,
+        )
+        .bind(vector_bytes)
+        .fetch_optional(&self.pool)
+        .await?;
+
+        if let Some(r) = row {
+            use sqlx::Row;
+            let distance: f32 = r.get("distance");
+            let id: i64 = r.get("rowid");
+
+            // Only update if very similar (avoid correcting unrelated queries)
+            if distance < 0.05 {
+                sqlx::query("UPDATE router_cache SET category = ? WHERE id = ?")
+                    .bind(new_category)
+                    .bind(id)
+                    .execute(&self.pool)
+                    .await?;
+                return Ok(true);
+            }
+        }
+
+        Ok(false)
+    }
 }
 
 fn f32_vec_to_bytes(v: &[f32]) -> Vec<u8> {

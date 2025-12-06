@@ -4,27 +4,21 @@
 **Goal:** Rewrite Python engine in Rust, achieve feature parity, and enable Swarm Intelligence.
 
 - [x] **Project Scaffolding:** Cargo workspace, Axum server, Tokio runtime.
-- [x] **LLM Engine:** Multi-Model Support (Flash/Pro) & God Mode (`--raw`).
-- [x] **Agents & Routing:** Router, Specialists, Action/System Agents, ReAct Loop.
-- [x] **RAG (Memory):** SQLite persistence & Vector Store (`sqlite-vec`).
-- [x] **Release & Integration:** GitHub CI/CD & Blackfin OS Integration.
+- [x] **LLM Engine:** Multi-Model Support & God Mode logic.
+- [x] **Agents & Routing:** Router, Specialists, A2A Loop.
+- [x] **RAG (Memory):** SQLite Persistence, Vector Store (`sqlite-vec`).
+- [x] **Integration:** GitHub CI/CD, Blackfin OS support.
 
-## ✅ Phase 3.5: Architecture & Security Hardening (Completed)
-**Goal:** Modularize codebase and secure local transport.
+## 🚀 Phase 4: Modern Interfaces & Protocols (In Progress)
+**Goal:** Enhance user experience and interoperability.
 
-- [x] **Modular Architecture:** Extracted core logic to `crates/sensei-lib` (Clean Architecture).
-- [x] **Secure Transport (UDS):** Implemented Unix Domain Sockets (`unix:///tmp/sensei.sock`) for local client-server communication with `chmod 700`.
-- [x] **Error Handling:** Migrated to `thiserror` for structured, robust error management in libraries.
-- [x] **Testing:** Refactored unit and integration tests to match modular structure.
-
-## ✅ Phase 4: MCP Integration (Completed)
-**Goal:** Connect Sensei to the AI Ecosystem.
-
-- [x] **MCP Server:** Created `crates/sensei-mcp` (Stdio transport).
-- [x] **Tools Exposure:** Expose `nmap` and `system_diagnostic` as MCP Tools.
-- [x] **Resources Exposure:** Expose RAG documents as MCP Resources (`sensei://knowledge/{id}`).
-
----
+- [x] **Architecture Refactor:** Modular `sensei-lib` + `server` + `client` + `mcp` crate.
+- [x] **Security:** Unix Domain Sockets (UDS) support.
+- [x] **Performance:** SQLite Hyper-Tuning (12M ops/sec).
+- [x] **Learning:** RLHF Loop (Semantic Router Cache correction).
+- [ ] **Protocol Unification (MCP Client):**
+    - [ ] `McpAgent` wrapper to treat MCP servers as native agents.
+    - [ ] Dynamic Tool Discovery & Routing.
 
 ## 🚧 Phase 4.5: TUI & UX (Current Focus)
 **Goal:** Deliver a "Cyberpunk" terminal experience.
@@ -35,20 +29,20 @@
     - [ ] "Cyberpunk/Hacker" aesthetic matching Blackfin theme.
     - [ ] Integrate UDS transport into TUI mode logic.
 
----
+## 🛡️ Phase 5: Resilience & Sovereignty
+**Goal:** Production-grade reliability and unrestricted local execution.
 
-## 🔮 Future Vision (Phase 5: Security Model)
-- [ ] **Access Control (MAC/ABAC):** Implement Bell-LaPadula model within the agent swarm.
-    - [ ] **Data Classification:** Tag ingested documents with levels (Unclassified, Confidential, Secret, Top Secret).
-    - [ ] **Agent Clearance:** Assign security clearance levels to each Agent.
-    - [ ] **Enforcement:** Modify `MemoryStore::search` to enforce "No Read Up".
+- [ ] **Local Intelligence (Ollama):** Fallback to local uncensored models (Llama 3, Mistral) for God Mode commands.
+- [ ] **Byzantine Consensus:** Multi-agent voting system.
+- [ ] **Security Model:** MAC/ABAC implementation.
+    - [ ] Data Classification (Confidential/Secret tags).
+    - [ ] Agent Clearance levels.
+    - [ ] No Read Up enforcement in MemoryStore.
 - [ ] **User Authentication:**
-    - [ ] Implement `SO_PEERCRED` verification on UDS (Owner only) for extra safety.
+    - [ ] Implement `SO_PEERCRED` verification on UDS (Owner only).
     - [ ] Add API Key/Token authentication for remote (HTTP) clients.
 - [ ] **Dynamic Swarm:**
     - [ ] Allow defining new agents in `prompts.yaml` without recompiling.
 
----
-
-## 🔧 Maintenance & Tech Debt
-- [ ] **Embedding Migration:** Migrate from `text-embedding-004` to `gemini-embedding-001` before Jan 2026.
+## 🔧 Tech Debt
+- [ ] **Embedding Migration:** Migrate to `gemini-embedding-001`.

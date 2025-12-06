@@ -149,7 +149,11 @@ async fn main() -> anyhow::Result<()> {
         Output strictly JSON format: {"category": "CategoryName", "enhanced_query": "Query"}
         "#,
     );
-    let router = Arc::new(RouterAgent::new(fast_llm.clone(), &router_prompt));
+    let router = Arc::new(RouterAgent::new(
+        fast_llm.clone(),
+        Some(memory.clone()),
+        &router_prompt,
+    ));
 
     // 6. Build State
     let state = AppState {

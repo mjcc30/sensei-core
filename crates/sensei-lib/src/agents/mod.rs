@@ -1,6 +1,7 @@
 pub mod action;
 pub mod router;
 pub mod specialists;
+pub mod mcp_agent;
 
 use async_recursion::async_recursion;
 use async_trait::async_trait;

@@ -27,7 +27,7 @@ async fn router_classifies_correctly() {
     let mock = MockLlm {
         response: r#"{"category": "RED", "enhanced_query": "Attack"}"#.to_string(),
     };
-    let router = RouterAgent::new(Arc::new(mock), "System Prompt");
+    let router = RouterAgent::new(Arc::new(mock), None, "System Prompt");
 
     let decision = router.classify("hack").await;
 
@@ -40,7 +40,7 @@ async fn router_handles_json_errors() {
     let mock = MockLlm {
         response: "Not JSON".to_string(),
     };
-    let router = RouterAgent::new(Arc::new(mock), "System Prompt");
+    let router = RouterAgent::new(Arc::new(mock), None, "System Prompt");
 
     let decision = router.classify("hack").await;
 

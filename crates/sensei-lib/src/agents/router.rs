@@ -1,4 +1,5 @@
 use crate::llm::Llm;
+use crate::memory::MemoryStore;
 use sensei_common::AgentCategory;
 use serde::Deserialize;
 use std::sync::Arc;
@@ -17,33 +18,69 @@ struct RouterResponse {
 
 pub struct RouterAgent {
     llm: Arc<dyn Llm>,
+    memory: Option<MemoryStore>, // Option to allow testing/running without DB
     system_prompt: String,
 }
 
 impl RouterAgent {
-    pub fn new(llm: Arc<dyn Llm>, system_prompt: &str) -> Self {
+    pub fn new(llm: Arc<dyn Llm>, memory: Option<MemoryStore>, system_prompt: &str) -> Self {
         Self {
             llm,
+            memory,
             system_prompt: system_prompt.to_string(),
         }
     }
 
     pub async fn classify(&self, input: &str) -> RoutingDecision {
+        // 1. Semantic Cache Lookup (Fast Path)
+        if let Some(ref mem) = self.memory {
+            // Generate embedding for query (Fast model embedding is cheap ~20ms)
+            if let Ok(embedding) = self.llm.embed(input).await {
+                // Threshold 0.1 means very close similarity
+                if let Ok(Some((cat_str, enhanced))) = mem.search_router_cache(embedding.clone(), 0.1).await {
+                    if let Ok(category) = serde_json::from_str::<AgentCategory>(&format!("\"{}\"", cat_str)) {
+                        println!("⚡ Cache Hit! Routing '{}' to {:?} (Saved ~1s)", input, category);
+                        return RoutingDecision {
+                            category,
+                            query: enhanced,
+                        };
+                    }
+                }
+                
+                // If miss, proceed to LLM but keep embedding for caching later
+                return self.classify_with_llm(input, Some(embedding)).await;
+            }
+        }
+
+        // Fallback or No Cache
+        self.classify_with_llm(input, None).await
+    }
+
+    async fn classify_with_llm(&self, input: &str, embedding: Option<Vec<f32>>) -> RoutingDecision {
         let prompt = format!("{}\n\nQuery: \"{}\"", self.system_prompt, input);
 
         match self.llm.generate(&prompt).await {
             Ok(json_str) => {
                 println!("DEBUG LLM RAW: {}", json_str);
-                // Robust JSON extraction: find first '{' and last '}'
                 let start = json_str.find('{').unwrap_or(0);
                 let end = json_str.rfind('}').map(|i| i + 1).unwrap_or(json_str.len());
                 let candidate = &json_str[start..end];
 
                 if let Ok(resp) = serde_json::from_str::<RouterResponse>(candidate) {
-                    RoutingDecision {
+                    let decision = RoutingDecision {
                         category: resp.category,
-                        query: resp.enhanced_query.unwrap_or(input.to_string()),
+                        query: resp.enhanced_query.clone().unwrap_or(input.to_string()),
+                    };
+
+                    // Cache the result asynchronously if possible (but here we await for simplicity)
+                    if let (Some(mem), Some(emb)) = (&self.memory, embedding) {
+                        let cat_str = serde_json::to_string(&decision.category).unwrap().replace('"', "");
+                        if let Err(e) = mem.add_router_cache(input, &cat_str, &decision.query, emb).await {
+                            eprintln!("Failed to cache routing: {}", e);
+                        }
                     }
+
+                    decision
                 } else {
                     eprintln!(
                         "Failed to parse router JSON. Raw: '{}', Candidate: '{}'",
@@ -62,6 +99,34 @@ impl RouterAgent {
                     query: input.to_string(),
                 }
             }
+        }
+    }
+
+    /// Reinforcement Learning: Manually correct a routing decision.
+    /// If a similar query exists in cache, it updates it. Otherwise, adds a new entry.
+    pub async fn correct_decision(&self, input: &str, correct_category: AgentCategory) {
+        let mem = match self.memory.as_ref() {
+            Some(m) => m,
+            None => return,
+        };
+
+        let embedding = match self.llm.embed(input).await {
+            Ok(e) => e,
+            Err(_) => return,
+        };
+
+        let cat_str = serde_json::to_string(&correct_category).unwrap().replace('"', "");
+        
+        // Try to update existing cache entry first
+        match mem.update_router_cache_category(embedding.clone(), &cat_str).await {
+            Ok(true) => println!("✅ Corrected router cache for '{}' -> {:?}", input, correct_category),
+            Ok(false) => {
+                // If not found (or not similar enough), add as new knowledge
+                println!("➕ Learned new routing for '{}' -> {:?}", input, correct_category);
+                // We use the raw input as the enhanced query for simplicity in correction
+                let _ = mem.add_router_cache(input, &cat_str, input, embedding).await;
+            }
+            Err(e) => eprintln!("Failed to correct cache: {}", e),
         }
     }
 }

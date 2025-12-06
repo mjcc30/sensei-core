@@ -16,7 +16,7 @@ async fn health_check_works() {
 
     let state = AppState {
         orchestrator: Arc::new(Orchestrator::new()),
-        router: Arc::new(RouterAgent::new(llm.clone(), "Dummy Prompt")),
+        router: Arc::new(RouterAgent::new(llm.clone(), None, "Dummy Prompt")),
         memory,
         llm,
     };
