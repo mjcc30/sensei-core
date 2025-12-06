@@ -71,9 +71,7 @@ impl Llm for LlmClient {
 
     async fn generate_raw(&self, prompt: &str) -> Result<String, SenseiError> {
         let api_key = env::var("GEMINI_API_KEY")
-            .map_err(|e| SenseiError::Config(serde_yaml::Error::custom(e.to_string())))?;
-        // Need to wrap env error or change Config error type. Using generic Llm error for now.
-        // Actually map_err(|_| SenseiError::Llm("GEMINI_API_KEY not set".into()))
+            .map_err(|_| SenseiError::Config("GEMINI_API_KEY must be set".to_string()))?;
 
         // Resolve model name if "auto"
         let model_name = if self.model_config == "auto" {
@@ -170,6 +168,3 @@ impl Llm for LlmClient {
         )))
     }
 }
-
-// Helper to fix serde_yaml import error in generate_raw
-use serde::de::Error as SerdeError;

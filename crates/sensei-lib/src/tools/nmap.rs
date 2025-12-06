@@ -13,7 +13,7 @@ impl Tool for NmapTool {
     }
 
     async fn execute(&self, target: &str) -> Result<String, SenseiError> {
-        // Basic input sanitization to prevent command injection
+        // Basic input sanitization
         if target.contains(';')
             || target.contains('&')
             || target.contains('|')
@@ -26,13 +26,17 @@ impl Tool for NmapTool {
         {
             return Err(SenseiError::Tool(
                 "Invalid characters in target name. Please provide a valid hostname or IP address."
-                    .into(),
+                    .to_string(),
             ));
         }
 
         // Check if nmap is available in PATH or use provided path
-        let nmap_path = env::var("SYSTEM_NMAPPATH").unwrap_or("nmap".to_string());
+        let nmap_path = match env::var("SYSTEM_NMAPPATH") {
+            Ok(path) => path,
+            Err(_) => "nmap".to_string(), // Default to looking in PATH
+        };
 
+        // Execute nmap command
         let output = Command::new(nmap_path)
             .arg("-F") // Fast scan
             .arg(target)
