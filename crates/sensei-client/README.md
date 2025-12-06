@@ -3,8 +3,8 @@
 The **Sensei Client** is a lightweight, fast CLI tool that acts as the user interface. It sends requests to the Sensei Server.
 
 ## 🛠️ Tech Stack
-*   **CLI Parser:** `Clap` (Command Line Argument Parser)
-*   **HTTP Client:** `Reqwest`
+*   **CLI Parser:** `Clap`
+*   **HTTP Client:** `Reqwest` + `Hyper` (for UDS)
 *   **Async:** `Tokio`
 
 ## 🚀 Usage
@@ -17,19 +17,22 @@ sensei-client [OPTIONS] --ask <QUESTION>
 
 | Flag | Short | Description | Default |
 | :--- | :--- | :--- | :--- |
-| `--ask` | `-a` | The question or prompt to send | (Required) |
-| `--url` | `-u` | The Server URL | `http://127.0.0.1:3000` |
-| `--help` | `-h` | Print help | |
-| `--version` | `-V` | Print version | |
+| `--ask` | `-a` | The question or prompt to send | (Optional) |
+| `--url` | `-u` | Server URL (HTTP or UNIX) | `http://127.0.0.1:3000` |
 
 ### Examples
 
 **Basic Question:**
 ```bash
-cargo run -p sensei-client -- --ask "Explain Ownership"
+sensei-client --ask "Explain Ownership"
 ```
 
-**Targeting a Remote Server:**
+**Secure Mode (Unix Socket):**
 ```bash
-cargo run -p sensei-client -- --url "http://192.168.1.50:3000" --ask "System status"
+sensei-client --url "unix:///tmp/sensei.sock" --ask "System status"
+```
+
+**Ingest Document (RAG):**
+```bash
+sensei-client add secret_plans.txt
 ```

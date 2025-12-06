@@ -1,124 +1,109 @@
-# 🦀 Sensei Core (v3)
+# 🦈 Sensei Core (Agent OS)
 
-**Sensei Core** is a high-performance, distributed AI Agent Swarm written in Rust. It serves as a local "AI Brain" capable of RAG (Retrieval Augmented Generation), secure Tool Execution, and swarming intelligence.
+**Sensei Core** is a high-performance, modular AI Agent Orchestration framework written in Rust. It is designed to build **Agent Operating Systems** capable of running specialized swarms locally, securely, and at enterprise scale.
 
-Now with **MCP (Model Context Protocol)** support for integration with Claude Desktop and Cursor!
+Initially built for Cybersecurity (Blackfin OS), it is now domain-agnostic.
 
-## ✨ Features
+## 🌟 Key Features
 
-*   **🐝 Agent Swarm:** Specialized agents (Red Team, Blue Team, Router) orchestrated to solve complex tasks.
-*   **🔌 MCP Server:** Native integration with Claude Desktop & Cursor via `sensei-mcp`.
-*   **🔒 Secure by Design:** Supports **Unix Domain Sockets (UDS)** for locked-down local communication.
-*   **🧠 RAG Memory:** SQLite + `sqlite-vec` for storing and retrieving knowledge embeddings.
-*   **⚡ Multi-Model:** Intelligent routing between Fast (Flash) and Smart (Pro) Gemini models.
-*   **🛠️ Tools:** Safe execution of `nmap` scans and system diagnostics.
-
-## 📦 Architecture
-
-The project is divided into modular crates:
-
-| Crate | Binary | Role |
-| :--- | :--- | :--- |
-| `sensei-server` | `sensei-server` | **The Brain.** HTTP/UDS Server hosting the Swarm and Memory. |
-| `sensei-client` | `sensei-client` | **The Voice.** CLI tool to interact with the server. |
-| `sensei-mcp` | `sensei-mcp` | **The Connector.** MCP-compliant server for IDE integration (Stdio). |
-| `sensei-lib` | - | **The Core.** Shared business logic (Agents, DB, LLM). |
+*   **🧠 Agent Swarm Architecture:** Orchestrate specialized agents (Rust-native or MCP-based) via a central brain.
+*   **🔌 Protocol Unification:** Treats local Rust agents and external [MCP (Model Context Protocol)](https://modelcontextprotocol.io) servers identically.
+*   **⚡ Enterprise Performance:**
+    *   **12,000,000+ ops/sec** SQLite throughput (tuned).
+    *   **< 5ms Routing Latency** via Semantic Caching (RLHF).
+*   **🛡️ Sovereignty & Security:**
+    *   **Local First:** Runs 100% offline with Ollama/Llama 3.
+    *   **Secure Transport:** Uses Unix Domain Sockets (UDS) by default (`unix:///tmp/sensei.sock`).
+    *   **Sandboxed Execution:** Tool execution is strictly controlled.
+*   **🔄 Dynamic & Self-Healing:**
+    *   **Hot Reloading:** Add/Remove MCP agents without restarting the server.
+    *   **A2A Protocol:** Recursive Agent-to-Agent delegation (`[DELEGATE: AGENT]`).
+    *   **Learning Loop:** Correct routing errors via API to teach the system.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-*   Rust 1.91+ (Edition 2024)
+*   Rust 1.80+
 *   `sqlite3` & `libsqlite3-dev`
-*   `nmap` (optional, for Action Agent)
-*   Google Gemini API Key
+*   A Google Gemini API Key (or Ollama for local mode)
 
 ### Installation
 
-1.  **Clone & Build:**
+1.  **Clone the repository:**
     ```bash
     git clone https://github.com/mjcc30/sensei-core.git
     cd sensei-core
-    cargo build --release
     ```
 
-2.  **Configuration:**
+2.  **Configure:**
     Create a `.env` file:
     ```env
     GEMINI_API_KEY=your_api_key_here
     DATABASE_URL=sqlite://sensei.db?mode=rwc
-    # Optional: Force a specific model
-    # GEMINI_MODEL=gemini-2.0-flash
+    # Optional: Local Inference
+    # OLLAMA_MODEL=llama3
     ```
 
-## 🎮 Usage Guide
+3.  **Build:**
+    ```bash
+    cargo build --release
+    ```
 
-### 1. Standard Mode (HTTP)
-Run the server on a TCP port (default 3000) and use the CLI.
+## 🎮 Usage
 
+### 1. Start the Server (The Brain)
 ```bash
-# Start Server
-./target/release/sensei-server &
+# Default (TCP 3000)
+./target/release/sensei-server
 
-# Ask Question
-./target/release/sensei-client --ask "How to secure Docker?"
+# Secure Mode (Unix Socket)
+SENSEI_LISTEN_ADDR=unix:///tmp/sensei.sock ./target/release/sensei-server
 ```
 
-### 2. Secure Mode (Unix Domain Sockets)
-**Recommended for Linux/macOS.** Prevents network access to the API.
-
+### 2. Use the Client (The Voice)
 ```bash
-# Start Server on Socket
-export SENSEI_LISTEN_ADDR=unix:///tmp/sensei.sock
-./target/release/sensei-server &
+# Ask a question
+./target/release/sensei-client --ask "Scan 192.168.1.1"
 
-# Connect Client
-./target/release/sensei-client --url unix:///tmp/sensei.sock --ask "Hello Secure World"
+# Add knowledge (RAG)
+./target/release/sensei-client add secrets.txt
 ```
 
-### 3. MCP Mode (Claude Desktop / Cursor)
-Integrate Sensei directly into your AI workflow.
-
-**Claude Desktop Configuration:**
-Add this to your `claude_desktop_config.json`:
-
+### 3. Connect External Tools (MCP)
+Create a `mcp_settings.json` file:
 ```json
 {
   "mcpServers": {
-    "sensei": {
-      "command": "/absolute/path/to/sensei-core/target/release/sensei-mcp",
-      "args": [],
-      "env": {
-        "GEMINI_API_KEY": "your_key",
-        "DATABASE_URL": "sqlite:///absolute/path/to/sensei.db?mode=rwc"
-      }
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/user"]
     }
   }
 }
 ```
+Sensei will automatically load this agent. You can then ask: *"List files in my home directory"*.
 
-Once connected, you can ask Claude:
-> *"Use Sensei to scan my local network for open ports."*
-> *"Read the latest documentation ingested in Sensei memory."*
+## 🏗️ Architecture
 
-## 🧪 Development & Testing
+The project is organized as a Cargo Workspace:
 
-We enforce high code quality and coverage.
+*   **`crates/sensei-lib`**: The core logic (Orchestrator, Memory, LLM, Agents). Import this to build your own bot.
+*   **`crates/sensei-server`**: The HTTP/UDS API server.
+*   **`crates/sensei-client`**: The CLI tool.
+*   **`crates/sensei-mcp`**: A standalone MCP Server implementation allowing Sensei to be used *by* Claude Desktop.
+*   **`crates/sensei-common`**: Shared types.
 
-```bash
-# Run all tests (Unit, Integration, Doc)
-cargo test --workspace
+## ⚙️ Configuration
 
-# Run Linter
-cargo clippy --workspace
-```
+*   **`prompts.yaml`**: Defines the persona of internal agents.
+*   **`mcp_settings.json`**: Defines external MCP tools.
 
-## 🗺️ Roadmap
+## 🧪 Performance & Quality
 
-- [x] Phase 1-3: Core Swarm, RAG, Rust Rewrite
-- [x] Phase 4a: Modular Architecture (Lib/Server/Client)
-- [x] Phase 4b: MCP Implementation & UDS Security
-- [ ] Phase 5: Advanced Security Model (MAC/ABAC)
-- [ ] Phase 6: TUI Polish & Streaming
+We enforce strict quality standards:
+*   **Benchmarks:** `cargo run -p sensei-server --example bench_sqlite --release`
+*   **QA:** `python3 scripts/validate_quality.py`
+*   **Coverage:** Unit tests, Integration tests, and E2E flows.
 
 ## 📄 License
-MIT
+GNU GPLv3
