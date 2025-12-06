@@ -71,77 +71,93 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to migrate database")?;
 
     // 4. Init Swarm
-    let mut orchestrator = Orchestrator::new();
+    let orchestrator = Orchestrator::new();
     let _active_categories = vec![
         "RED", "BLUE", "CLOUD", "CRYPTO", "OSINT", "SYSTEM", "ACTION", "CASUAL", "NOVICE",
     ];
 
     // Specialists -> Smart LLM
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        smart_llm.clone(),
-        AgentCategory::Red,
-        &get_prompt("red_team", "SYSTEM: You are a Red Team Operator."),
-        Some(get_prompt("master", "SYSTEM: You are SENSEI.")),
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            smart_llm.clone(),
+            AgentCategory::Red,
+            &get_prompt("red_team", "SYSTEM: You are a Red Team Operator."),
+            Some(get_prompt("master", "SYSTEM: You are SENSEI.")),
+        )))
+        .await;
 
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        smart_llm.clone(),
-        AgentCategory::Blue,
-        &get_prompt("blue_team", "SYSTEM: You are a Blue Team Analyst."),
-        None,
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            smart_llm.clone(),
+            AgentCategory::Blue,
+            &get_prompt("blue_team", "SYSTEM: You are a Blue Team Analyst."),
+            None,
+        )))
+        .await;
 
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        smart_llm.clone(),
-        AgentCategory::Cloud,
-        &get_prompt("cloud", "SYSTEM: You are a Cloud Security Architect."),
-        None,
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            smart_llm.clone(),
+            AgentCategory::Cloud,
+            &get_prompt("cloud", "SYSTEM: You are a Cloud Security Architect."),
+            None,
+        )))
+        .await;
 
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        smart_llm.clone(),
-        AgentCategory::Crypto,
-        &get_prompt("crypto", "SYSTEM: You are a Cryptographer."),
-        None,
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            smart_llm.clone(),
+            AgentCategory::Crypto,
+            &get_prompt("crypto", "SYSTEM: You are a Cryptographer."),
+            None,
+        )))
+        .await;
 
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        smart_llm.clone(),
-        AgentCategory::Osint,
-        &get_prompt("osint", "SYSTEM: You are an Intelligence Officer."),
-        None,
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            smart_llm.clone(),
+            AgentCategory::Osint,
+            &get_prompt("osint", "SYSTEM: You are an Intelligence Officer."),
+            None,
+        )))
+        .await;
 
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        smart_llm.clone(),
-        AgentCategory::System,
-        &get_prompt("system", "SYSTEM: You are Root."),
-        None,
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            smart_llm.clone(),
+            AgentCategory::System,
+            &get_prompt("system", "SYSTEM: You are Root."),
+            None,
+        )))
+        .await;
 
     // Casual/Novice -> Fast LLM
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        fast_llm.clone(),
-        AgentCategory::Casual,
-        &get_prompt("casual", "SYSTEM: You are Sensei."),
-        None,
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            fast_llm.clone(),
+            AgentCategory::Casual,
+            &get_prompt("casual", "SYSTEM: You are Sensei."),
+            None,
+        )))
+        .await;
 
-    orchestrator.register(Box::new(SpecializedAgent::new(
-        fast_llm.clone(),
-        AgentCategory::Novice,
-        &get_prompt("novice", "SYSTEM: You are a Teacher."),
-        None,
-    )));
+    orchestrator
+        .register(Box::new(SpecializedAgent::new(
+            fast_llm.clone(),
+            AgentCategory::Novice,
+            &get_prompt("novice", "SYSTEM: You are a Teacher."),
+            None,
+        )))
+        .await;
 
     // Register Tool Agents (Action & System Tools)
     let mut action_agent = ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::Action);
     action_agent.register_tool(Box::new(sensei_lib::tools::nmap::NmapTool));
-    orchestrator.register(Box::new(action_agent));
+    orchestrator.register(Box::new(action_agent)).await;
 
     let mut system_agent = ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::System);
     system_agent.register_tool(Box::new(sensei_lib::tools::system::SystemTool));
-    orchestrator.register(Box::new(system_agent));
+    orchestrator.register(Box::new(system_agent)).await;
 
     // 4.5 Init MCP Agents (Dynamic)
     let mut dynamic_extensions = Vec::new();
@@ -166,7 +182,7 @@ async fn main() -> anyhow::Result<()> {
                     {
                         Ok(agent) => {
                             info!("   ✅ MCP Agent '{}' registered", name);
-                            orchestrator.register(Box::new(agent));
+                            orchestrator.register(Box::new(agent)).await;
                             dynamic_extensions.push(name.to_uppercase());
                         }
                         Err(e) => warn!("   ❌ Failed to init MCP Agent '{}': {}", name, e),
@@ -214,6 +230,107 @@ async fn main() -> anyhow::Result<()> {
         memory,
         llm: smart_llm.clone(),
     };
+
+    // 6.5 Hot Reloading Watcher
+    let orchestrator_clone = state.orchestrator.clone();
+    let mcp_path_clone = mcp_path.clone();
+    let fast_llm_clone = fast_llm.clone();
+
+    // Initial state matching what we just loaded (Upper case names)
+    let mut current_known_servers: std::collections::HashSet<String> =
+        dynamic_extensions.iter().cloned().collect(); // dynamic_extensions is already Upper Case Strings
+
+    tokio::spawn(async move {
+        use std::time::Duration;
+        let mut last_mtime = std::fs::metadata(&mcp_path_clone)
+            .and_then(|m| m.modified())
+            .ok();
+
+        loop {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+
+            // Check file modification time
+            let current_mtime = std::fs::metadata(&mcp_path_clone)
+                .and_then(|m| m.modified())
+                .ok();
+
+            // If file exists and mtime changed (or appeared)
+            if current_mtime.is_some() && current_mtime != last_mtime {
+                info!(
+                    "🔄 Configuration change detected in {}. Reloading MCP Agents...",
+                    mcp_path_clone
+                );
+                last_mtime = current_mtime;
+
+                if let Ok(new_config) = sensei_lib::config::load_mcp_settings(&mcp_path_clone) {
+                    let new_keys: std::collections::HashSet<String> = new_config
+                        .mcp_servers
+                        .keys()
+                        .map(|k| k.to_uppercase())
+                        .collect();
+
+                    // 1. Remove deleted agents
+                    let to_remove: Vec<String> = current_known_servers
+                        .difference(&new_keys)
+                        .cloned()
+                        .collect();
+                    for name in to_remove {
+                        info!("   🗑️ Removing agent '{}'", name);
+                        orchestrator_clone
+                            .unregister(&AgentCategory::Extension(name.to_lowercase()))
+                            .await;
+                        current_known_servers.remove(&name);
+                    }
+
+                    // 2. Add new agents
+                    for (name, conf) in new_config.mcp_servers {
+                        let name_upper = name.to_uppercase();
+                        if !current_known_servers.contains(&name_upper) {
+                            info!("   ✨ Adding new agent '{}'", name);
+
+                            let envs = conf.env;
+                            let args_str = conf.args; // Owned Vec<String>
+                            let args_slice: Vec<&str> =
+                                args_str.iter().map(|s| s.as_str()).collect();
+
+                            match sensei_lib::mcp_client::McpClient::new(
+                                &conf.command,
+                                &args_slice,
+                                envs,
+                            )
+                            .await
+                            {
+                                Ok(client) => {
+                                    let client_arc = Arc::new(client);
+                                    match sensei_lib::agents::mcp_agent::McpAgent::new(
+                                        client_arc,
+                                        fast_llm_clone.clone(),
+                                        &name,
+                                    )
+                                    .await
+                                    {
+                                        Ok(agent) => {
+                                            orchestrator_clone.register(Box::new(agent)).await;
+                                            current_known_servers.insert(name_upper);
+                                        }
+                                        Err(e) => warn!(
+                                            "   ❌ Failed to init MCP Agent '{}': {}",
+                                            name, e
+                                        ),
+                                    }
+                                }
+                                Err(e) => {
+                                    warn!("   ❌ Failed to spawn MCP Server '{}': {}", name, e)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    warn!("   ❌ Failed to reload MCP settings (JSON syntax error?)");
+                }
+            }
+        }
+    });
 
     // 7. Start Server
     let app = app(state);

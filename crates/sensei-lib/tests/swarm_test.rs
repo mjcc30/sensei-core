@@ -16,10 +16,10 @@ impl Agent for MockRedAgent {
 
 #[tokio::test]
 async fn swarm_routing_works() {
-    let mut orch = Orchestrator::new();
+    let orch = Orchestrator::new();
 
     // Register the mock agent
-    orch.register(Box::new(MockRedAgent));
+    orch.register(Box::new(MockRedAgent)).await;
 
     // Dispatch directly to RED category (bypassing LLM Router for this unit test)
     let response = orch.dispatch(AgentCategory::Red, "Hack wifi").await;

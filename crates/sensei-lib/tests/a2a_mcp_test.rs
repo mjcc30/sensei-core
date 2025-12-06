@@ -43,10 +43,10 @@ async fn test_a2a_loopback_delegation() -> Result<()> {
         return Ok(());
     }
 
-    let mut orchestrator = Orchestrator::new();
+    let orchestrator = Orchestrator::new();
 
     // 1. Register CASUAL Agent (The Delegator)
-    orchestrator.register(Box::new(DelegatorAgent));
+    orchestrator.register(Box::new(DelegatorAgent)).await;
 
     // 2. Register LOOPBACK Agent (The MCP Extension)
     // Connecting to actual binary
@@ -54,8 +54,7 @@ async fn test_a2a_loopback_delegation() -> Result<()> {
     let mcp_agent = McpAgent::new(Arc::new(mcp_client), Arc::new(DecisionLlm), "loopback").await?;
 
     // Registering it. category() is now Extension("loopback")
-    orchestrator.register(Box::new(mcp_agent));
-
+    orchestrator.register(Box::new(mcp_agent)).await;
     // 3. Dispatch to CASUAL
     // It should delegate to LOOPBACK, which calls `system_diagnostic` -> `uptime`
     let response = orchestrator
