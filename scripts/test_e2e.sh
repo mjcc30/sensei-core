@@ -1,22 +1,29 @@
 #!/bin/bash
-source $HOME/.cargo/env
+set -e
+# source $HOME/.cargo/env # Not needed inside agent env usually
 
-# Note: This script relies on GEMINI_API_KEY being set in the environment
-# OR in a .env file in the working directory.
+echo "🔨 Using pre-built Release binaries..."
+# cd ~/Projects/sensei-core # Path dependent, removing
 
-echo "🔨 Building Workspace..."
-cd ~/Projects/sensei-core
-cargo build --quiet
+SERVER_BIN="./target/release/sensei-server"
+CLIENT_BIN="./target/release/sensei-client"
+
+# Setup DB
+export DATABASE_URL="sqlite://$(pwd)/sensei_e2e.db?mode=rwc"
+rm sensei_e2e.db 2>/dev/null || true
+sqlite3 sensei_e2e.db < crates/sensei-lib/migrations/20250101_init.sql
+sqlite3 sensei_e2e.db < crates/sensei-lib/migrations/20250102_vectors.sql || true
 
 echo "🚀 Starting Server..."
-./target/debug/sensei-server &
+$SERVER_BIN &
 SERVER_PID=$!
 
 echo "⏳ Waiting for server..."
-sleep 5
+sleep 3
 
 echo "📡 Running Client..."
-./target/debug/sensei-client --ask "Hello Rust, are you connected to Gemini?"
+$CLIENT_BIN --ask "Hello Rust, are you connected to Gemini?"
 
 echo "🛑 Stopping Server..."
 kill $SERVER_PID
+rm sensei_e2e.db

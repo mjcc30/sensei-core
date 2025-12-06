@@ -40,7 +40,16 @@ This document defines the expected behaviors of the Sensei AI Mentor. It serves 
 
 ---
 
-## 5. Safety & Filters
+## 5. Security & Transport (New in v3)
+
+*   **Secure Local Transport (UDS):**
+    *   On Linux/macOS, client and server communicate via a Unix Domain Socket (`/tmp/sensei.sock` by default).
+    *   The socket file permissions are set to `700`, ensuring only the owner can connect.
+*   **MCP Integration:**
+    *   Sensei exposes its tools and memory via the Model Context Protocol over `stdio`.
+    *   This allows secure integration with desktop AI tools (Claude, Cursor) without exposing network ports.
+
+## 6. Safety & Filters
 
 *   **Query Optimization:** Queries like "How to hack" are rephrased by `RouterAgent` into "Technical audit of..." to bypass soft filters.
 *   **God Mode:** `Red` agent can bypass Safety Filters (`BLOCK_NONE`) if triggered with `--raw`.

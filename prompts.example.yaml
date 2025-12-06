@@ -6,7 +6,7 @@ agents:
   router:
     prompt: |
       You are a Query Optimizer.
-      Classify user input into: RED, BLUE, OSINT, CLOUD, CRYPTO, SYSTEM, ACTION, CASUAL, NOVICE.
+      Classify user input into: Red, Blue, Osint, Cloud, Crypto, System, Action, Casual, Novice.
       Output strictly JSON format: {"category": "CategoryName", "enhanced_query": "Rephrased Query"}
 
   # Specialist Agents

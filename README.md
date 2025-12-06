@@ -10,11 +10,13 @@
 *   **📚 RAG (Retrieval Augmented Generation):** Ingest documents (`sqlite-vec`) and automatically retrieve context during conversation.
 *   **🛠️ Tool Execution:** Agents can run system commands (`nmap`, `uptime`, `df`) securely via an allowlist.
 *   **💾 Persistence:** SQLite storage for chat sessions and vector embeddings (3072 dims).
+*   **🔒 Secure Transport:** Uses **Unix Domain Sockets (UDS)** by default on Linux/macOS for secure local communication.
+*   **🤖 MCP Integration:** Includes a **Model Context Protocol (MCP)** server to connect Sensei with AI IDEs like Cursor or Claude Desktop.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-*   Rust 1.91.1+
+*   Rust 1.75+
 *   `sqlite3` & `libsqlite3-dev`
 *   `nmap` (optional, for Action Agent)
 *   A Google Gemini API Key
@@ -42,77 +44,69 @@
 ## 🎮 Usage
 
 ### 1. Start the Server
-The server acts as the central brain (Daemon).
+The server runs as a background daemon.
+*   **Linux/macOS:** Defaults to Unix Socket (`/tmp/sensei.sock`).
+*   **Windows:** Defaults to TCP (`127.0.0.1:3000`).
+
 ```bash
 ./target/release/sensei-server
 ```
 
+You can force a specific address:
+```bash
+SENSEI_LISTEN_ADDR=0.0.0.0:3000 ./target/release/sensei-server
+```
+
 ### 2. Ask Questions (CLI)
-Use the lightweight client to interact.
+Use the lightweight client. It automatically detects the best connection method.
+
 ```bash
-# Standard query
-./target/release/sensei-client ask "How to secure a Docker container?"
+# Ask a question
+./target/release/sensei-client --ask "How to secure a Docker container?"
 
-# Direct mode (shortcut)
-./target/release/sensei-client "Explain buffer overflow"
-
-# "God Mode" (Red Team Raw)
-# Requires 'red_team' classification and '--raw' flag
-./target/release/sensei-client ask "Write a C exploit for CVE-2024-XXXX --raw"
+# Explicitly target a socket or URL
+./target/release/sensei-client --url unix:///tmp/sensei.sock --ask "Hello"
+./target/release/sensei-client --url http://127.0.0.1:3000 --ask "Hello"
 ```
 
-### 3. Ingest Knowledge (RAG)
-Feed the brain with text files.
-```bash
-echo "The production database password is 'hunter2'" > secrets.txt
-./target/release/sensei-client add secrets.txt
+### 3. MCP Server (Claude/Cursor Integration)
+To use Sensei as a "Brain" for Claude Desktop or Cursor:
 
-# Verify retrieval
-./target/release/sensei-client ask "What is the db password?"
-```
-
-## ⚙️ Advanced Configuration
-
-You can override system defaults via environment variables:
-
-*   `GEMINI_MODEL`: Force a specific model (e.g., `gemini-2.0-flash-001`) globally, bypassing the tiered routing (Fast/Smart).
-*   `SENSEI_PROMPTS_PATH`: Absolute path to a custom `prompts.yaml` (default: `./prompts.yaml`). Essential for production deployments (e.g., `/etc/sensei/prompts.yaml`).
-*   `RUST_LOG`: Control logging verbosity (e.g., `debug`, `info`, `warn`).
-
-### Configuration Files
-*   [prompts.yaml](./prompts.yaml): Defines agent personas (system prompts) and router classification logic.
-*   [.env.example](./.env.example): Template for environment variables.
+1.  Configure your MCP client (e.g., `claude_desktop_config.json`):
+    ```json
+    {
+      "mcpServers": {
+        "sensei": {
+          "command": "/absolute/path/to/sensei-core/target/release/sensei-mcp",
+          "args": [],
+          "env": {
+            "DATABASE_URL": "sqlite:///absolute/path/to/sensei.db"
+          }
+        }
+      }
+    }
+    ```
+2.  Restart Claude/Cursor. Sensei's tools and memory are now available!
 
 ## 🏗️ Architecture
 
-*   **Server (`crates/sensei-server`):** Axum-based REST API. Manages lifecycle, DB connection pool, and LLM clients.
-*   **Agents:**
-    *   `RouterAgent`: Classifies intent (Red, Blue, System...) and optimizes queries.
-    *   `SpecializedAgent`: Expert persona (prompt-engineered) utilizing Smart LLM.
-    *   `ToolExecutorAgent`: Agent capable of calling `Tool` traits (Nmap, System).
-*   **Memory:** SQLite with `sqlite-vec` extension for vector similarity search.
+The project is organized as a Cargo Workspace with 5 crates:
 
-## 🧪 Testing & Quality
+*   **`sensei-lib`**: The Core Logic (Agents, RAG, Tools, DB). Shared by all components.
+*   **`sensei-server`**: The HTTP/UDS API Server (Axum).
+*   **`sensei-client`**: The CLI Tool (Reqwest/Hyper).
+*   **`sensei-mcp`**: The MCP Server (Stdio/JSON-RPC).
+*   **`sensei-common`**: Shared types and errors.
 
-We enforce strict quality standards.
+## 🧪 Testing
 
 ```bash
-# Run Unit & Integration Tests
+# Run Unit Tests
 cargo test --workspace
 
-# Run E2E Benchmarks (requires python3)
-python3 scripts/benchmark.py      # Performance (v2 vs v3)
-python3 scripts/test_rag.py       # RAG Capability
-python3 scripts/validate_quality.py # Response Quality
+# Run Benchmark (TCP vs UDS)
+python3 scripts/bench_uds_vs_tcp.py
 ```
-
-## 🗺️ Roadmap
-
-See [TODO.md](./TODO.md) for detailed progress.
-- [x] Core V3 (Swarm, RAG, Tools)
-- [ ] Phase 4: MCP Protocol Implementation
-- [ ] Phase 4: TUI (Terminal UI)
-- [ ] Phase 5: Security Model (MAC/ABAC)
 
 ## 📄 License
 MIT

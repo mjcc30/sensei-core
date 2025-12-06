@@ -54,3 +54,4 @@
 
 ## 🔧 Maintenance & Tech Debt
 - [ ] **Embedding Migration:** Migrate from `text-embedding-004` to `gemini-embedding-001` before Jan 2026.
+- [ ] **Router Optimization:** Tune `RouterAgent` prompt to improve classification accuracy (aim for >90% on bench). Address confusion between ACTION/SYSTEM and NOVICE/BLUE.
