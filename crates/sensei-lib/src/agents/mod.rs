@@ -33,7 +33,9 @@ impl Orchestrator {
     }
 
     pub fn register(&mut self, agent: Box<dyn Agent>) {
-        self.agents.insert(agent.category(), Arc::new(agent));
+        let cat = agent.category();
+        println!("DEBUG: Registering agent for category {:?}", cat);
+        self.agents.insert(cat, Arc::new(agent));
     }
 
     pub async fn dispatch(&self, category: AgentCategory, input: &str) -> String {
@@ -42,13 +44,20 @@ impl Orchestrator {
 
     #[async_recursion]
     async fn dispatch_loop(&self, category: AgentCategory, input: &str, depth: u8) -> String {
+        // println!("DEBUG: Dispatching to {:?} (depth {})", category, depth);
+        // println!("DEBUG: Available Agents: {:?}", self.agents.keys().collect::<Vec<_>>());
         if depth == 0 {
             return "Error: Agent recursion limit reached (A2A loop detected).".to_string();
         }
 
         let agent = if let Some(agent) = self.agents.get(&category) {
+            println!("DEBUG: Found agent for {:?}", category);
             agent
         } else {
+            println!(
+                "DEBUG: Agent not found for {:?}. Fallback to Casual.",
+                category
+            );
             // Fallback to Casual if agent not found
             if let Some(casual) = self.agents.get(&AgentCategory::Casual) {
                 casual
@@ -61,11 +70,12 @@ impl Orchestrator {
         };
 
         let response = agent.process(input).await;
+        // println!("DEBUG: Response from {:?}: '{}'", category, response);
 
         // Optimized Protocol v2: [DELEGATE: CATEGORY] Payload
         // (?s) allows dot to match newlines for the payload
         static RE: OnceLock<Regex> = OnceLock::new();
-        let re = RE.get_or_init(|| Regex::new(r"(?m)^[DELEGATE:\s*(\w+)]\s*(?s)(.*)$").unwrap());
+        let re = RE.get_or_init(|| Regex::new(r"(?m)^\[DELEGATE:\s*(\w+)\]\s*(?s)(.*)$").unwrap());
 
         if let Some(caps) = re.captures(&response) {
             let target_cat_str = caps.get(1).map_or("", |m| m.as_str());
@@ -86,6 +96,8 @@ impl Orchestrator {
                 name => Some(AgentCategory::Extension(name.to_lowercase())),
             };
 
+            // println!("DEBUG: Resolved Target Cat: {:?}", target_cat);
+
             if let Some(cat) = target_cat {
                 // 1. Execute Delegated Task
                 let observation = self.dispatch_loop(cat, target_query, depth - 1).await;
@@ -93,10 +105,8 @@ impl Orchestrator {
                 // 2. Feed Result back to Original Agent (ReAct Loop)
                 // We use [OBSERVATION] block to match the new protocol style
                 let new_input = format!(
-                    "{}\n\n[OBSERVATION from {}}\n புகைப்படம்",
-                    input,
-                    target_cat_str,
-                    observation
+                    "{}\n\n[OBSERVATION from {}]\n{}",
+                    input, target_cat_str, observation
                 );
                 // Call the original agent again with the new context
                 return self.dispatch_loop(category, &new_input, depth - 1).await;

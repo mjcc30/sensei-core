@@ -105,8 +105,6 @@ impl Agent for McpAgent {
     }
 
     fn category(&self) -> AgentCategory {
-        // For now, we map all generic MCP agents to ACTION category,
-        // or we could extend AgentCategory to include dynamic ones.
-        AgentCategory::Action
+        AgentCategory::Extension(self.server_name.clone().to_lowercase())
     }
 }
