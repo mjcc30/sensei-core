@@ -119,7 +119,7 @@ impl McpClient {
     }
 
     pub async fn initialize(&self) -> Result<()> {
-        let _res = self.send_request("initialize", Some(json!({ "protocolVersion": "0.1.0", "client": { "name": "sensei-client", "version": "0.1.0" }, "capabilities": {} }))).await?;
+        let _res = self.send_request("initialize", Some(json!({ "protocolVersion": "2024-11-05", "clientInfo": { "name": "sensei-client", "version": "0.1.0" }, "capabilities": {} }))).await?;
         Ok(())
     }
 

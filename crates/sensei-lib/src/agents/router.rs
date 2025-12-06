@@ -31,7 +31,53 @@ impl RouterAgent {
         }
     }
 
+    fn check_fast_path(&self, input: &str) -> Option<RoutingDecision> {
+        let input_lower = input.to_lowercase();
+
+        // 1. Explicit Tool Call: "nmap ..." or "scan IP"
+        // This is a "Core Heuristic" to ensure basic tools work flawlessly out of the box.
+        // Future dynamic tools will rely on Semantic Cache (RLHF).
+        if input_lower.contains("nmap")
+            || (input_lower.starts_with("scan ") && input.chars().any(|c| c.is_numeric()))
+        {
+            return Some(RoutingDecision {
+                category: AgentCategory::new("action"),
+                query: input.to_string(),
+            });
+        }
+
+        // 2. Explicit System Diagnostics
+        if [
+            "uptime",
+            "whoami",
+            "df -h",
+            "free -h",
+            "check disk",
+            "check memory",
+            "check ram",
+        ]
+        .iter()
+        .any(|&cmd| input_lower.contains(cmd))
+        {
+            return Some(RoutingDecision {
+                category: AgentCategory::new("system"),
+                query: input.to_string(),
+            });
+        }
+
+        None
+    }
+
     pub async fn classify(&self, input: &str) -> RoutingDecision {
+        // 0. Regex Fast Path (Zero Latency)
+        if let Some(decision) = self.check_fast_path(input) {
+            println!(
+                "⚡ Regex Hit! Routing '{}' to {:?} (Saved ~1.5s)",
+                input, decision.category
+            );
+            return decision;
+        }
+
         // 1. Semantic Cache Lookup (Fast Path)
         if let Some(ref mem) = self.memory {
             // Generate embedding for query (Fast model embedding is cheap ~20ms)

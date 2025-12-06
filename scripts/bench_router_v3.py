@@ -8,7 +8,8 @@ import urllib.request
 
 # Configuration
 SERVER_BIN = "./target/release/sensei-server"
-SERVER_URL = "http://127.0.0.1:3000/v1/debug/classify"
+SERVER_URL = "http://0.0.0.0:3000/v1/debug/classify"
+HEALTH_URL = "http://0.0.0.0:3000/health"
 API_KEY = os.environ.get("GEMINI_API_KEY")
 
 # Test Cases (Adapted from V2 for V3 Enum casing)
@@ -26,7 +27,7 @@ TEST_CASES = [
 def wait_for_server():
     for _ in range(10):
         try:
-            with urllib.request.urlopen("http://127.0.0.1:3000/health") as response:
+            with urllib.request.urlopen(HEALTH_URL) as response:
                 if response.status == 200: return True
         except:
             time.sleep(0.5)

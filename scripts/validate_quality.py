@@ -97,7 +97,7 @@ def test_learning_loop():
 
     if not final: return False
     
-    success = final['category'] == "SYSTEM"
+    success = final['category'].upper() == "SYSTEM"
     print(f"     Classified as: {final['category']} (Latency: {duration:.2f}ms)")
     
     if success:

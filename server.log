@@ -1,0 +1,211 @@
+[2m2025-12-06T17:37:11.583199Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m ✅ Loaded prompts from prompts.yaml
+[2m2025-12-06T17:37:11.649387Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m 📦 Connecting to database: sqlite://sensei.db?mode=rwc
+[2m2025-12-06T17:37:11.669286Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"PRAGMA foreign_keys = ON; …" [3mdb.statement[0m[2m=[0m"\n\nPRAGMA foreign_keys = ON; \n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m2.771331ms [3melapsed_secs[0m[2m=[0m0.002771331
+[2m2025-12-06T17:37:11.674503Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"CREATE TABLE IF NOT …" [3mdb.statement[0m[2m=[0m"\n\n\nCREATE TABLE IF NOT EXISTS _sqlx_migrations (\n    version BIGINT PRIMARY KEY,\n    description TEXT NOT NULL,\n    installed_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,\n    success BOOLEAN NOT NULL,\n    checksum BLOB NOT NULL,\n    execution_time BIGINT NOT NULL\n);\n                \n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m4.449666ms [3melapsed_secs[0m[2m=[0m0.004449666
+[2m2025-12-06T17:37:11.677412Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT version FROM _sqlx_migrations …" [3mdb.statement[0m[2m=[0m"\n\nSELECT version FROM _sqlx_migrations WHERE success = false ORDER BY version LIMIT 1\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m2.585033ms [3melapsed_secs[0m[2m=[0m0.002585033
+[2m2025-12-06T17:37:11.679927Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT version, checksum FROM …" [3mdb.statement[0m[2m=[0m"\n\nSELECT version, checksum FROM _sqlx_migrations ORDER BY version\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m3 [3melapsed[0m[2m=[0m1.931714ms [3melapsed_secs[0m[2m=[0m0.001931714
+DEBUG: Registering agent for category AgentCategory("red")
+DEBUG: Registering agent for category AgentCategory("blue")
+DEBUG: Registering agent for category AgentCategory("cloud")
+DEBUG: Registering agent for category AgentCategory("crypto")
+DEBUG: Registering agent for category AgentCategory("osint")
+DEBUG: Registering agent for category AgentCategory("system")
+DEBUG: Registering agent for category AgentCategory("casual")
+DEBUG: Registering agent for category AgentCategory("novice")
+DEBUG: Registering agent for category AgentCategory("action")
+DEBUG: Registering agent for category AgentCategory("system")
+[2m2025-12-06T17:37:11.685481Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m 🔌 Loading MCP Servers from mcp_settings.json
+[2m2025-12-06T17:37:11.685906Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m    - Connecting to filesystem...
+[2m2025-12-06T17:37:11.686546Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530517971968), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:11.686715Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518800128), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:11.687086Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530517923328), interests=READABLE
+Secure MCP Filesystem Server running on stdio
+🔌 Connected to MCP Server 'filesystem'. Discovered 14 tools.
+[2m2025-12-06T17:37:12.703407Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m    ✅ MCP Agent 'filesystem' registered
+DEBUG: Registering agent for category AgentCategory("filesystem")
+[2m2025-12-06T17:37:12.703987Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m    - Connecting to git...
+[2m2025-12-06T17:37:12.704637Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530517974272), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:12.705072Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518012160), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:12.705513Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518692864), interests=READABLE
+/usr/bin/python3: No module named mcp_server_git
+[2m2025-12-06T17:37:12.724573Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:12.725035Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:12.725375Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:12.725606Z[0m [33m WARN[0m [2msensei_server[0m[2m:[0m    ❌ Failed to init MCP Agent 'git': MCP Server closed connection unexpectedly
+[2m2025-12-06T17:37:12.725924Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m 🧠 Router Prompt Configured with Extensions: FILESYSTEM
+[2m2025-12-06T17:37:12.730002Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518773888), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:12.730343Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m 🚀 Sensei Server running on http://0.0.0.0:3000 (Swarm Mode)
+[2m2025-12-06T17:37:12.730577Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m ⚡ Fast Model: gemini-2.5-flash
+[2m2025-12-06T17:37:12.730825Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m 🧠 Smart Model: gemini-3-pro-preview
+[2m2025-12-06T17:37:16.635888Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518775424), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:16.636842Z[0m [35mTRACE[0m [2maxum::serve[0m[2m:[0m connection 127.0.0.1:49702 accepted
+[2m2025-12-06T17:37:16.649893Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m checkout waiting for idle connection: ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:16.650347Z[0m [34mDEBUG[0m [2mreqwest::connect[0m[2m:[0m starting new connection: https://generativelanguage.googleapis.com/
+[2m2025-12-06T17:37:16.650924Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::connect::http[0m[2m:[0m Http::connect; scheme=Some("https"), host=Some("generativelanguage.googleapis.com"), port=None
+[2m2025-12-06T17:37:16.706723Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::connect::http[0m[2m:[0m connecting to 142.250.75.234:443
+[2m2025-12-06T17:37:16.708077Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530517974272), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:16.719147Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::connect::http[0m[2m:[0m connected to 142.250.75.234:443
+[2m2025-12-06T17:37:16.743248Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::client[0m[2m:[0m http1 handshake complete, spawning background dispatcher task
+[2m2025-12-06T17:37:16.745069Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::client[0m[2m:[0m waiting for connection to be ready
+[2m2025-12-06T17:37:16.745725Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::client[0m[2m:[0m connection is ready
+[2m2025-12-06T17:37:16.746263Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m checkout dropped for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:17.072973Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:17.092160Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:17.092776Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:17.137030Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO documents (content) …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO documents (content) VALUES (?) RETURNING id\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m42.891702ms [3melapsed_secs[0m[2m=[0m0.042891702
+[2m2025-12-06T17:37:17.729831Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:37:17.789438Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO vec_items (rowid, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO vec_items (rowid, embedding) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m650.672876ms [3melapsed_secs[0m[2m=[0m0.650672876
+[2m2025-12-06T17:37:17.942519Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:18.014548Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518775424), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:18.014886Z[0m [35mTRACE[0m [2maxum::serve[0m[2m:[0m connection 127.0.0.1:51258 accepted
+[2m2025-12-06T17:37:18.071757Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO sessions (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO sessions (id, title) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m52.439474ms [3melapsed_secs[0m[2m=[0m0.052439474
+[2m2025-12-06T17:37:18.077142Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"PRAGMA foreign_keys = ON; …" [3mdb.statement[0m[2m=[0m"\n\nPRAGMA foreign_keys = ON; \n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m115.268µs [3melapsed_secs[0m[2m=[0m0.000115268
+[2m2025-12-06T17:37:18.100448Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO messages (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m22.740118ms [3melapsed_secs[0m[2m=[0m0.022740118
+[2m2025-12-06T17:37:18.101011Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m checkout waiting for idle connection: ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:18.101264Z[0m [34mDEBUG[0m [2mreqwest::connect[0m[2m:[0m starting new connection: https://generativelanguage.googleapis.com/
+[2m2025-12-06T17:37:18.101493Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::connect::http[0m[2m:[0m Http::connect; scheme=Some("https"), host=Some("generativelanguage.googleapis.com"), port=None
+[2m2025-12-06T17:37:18.117260Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::connect::http[0m[2m:[0m connecting to 216.58.214.170:443
+[2m2025-12-06T17:37:18.118380Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518687744), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:18.128071Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::connect::http[0m[2m:[0m connected to 216.58.214.170:443
+[2m2025-12-06T17:37:18.145011Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::client[0m[2m:[0m http1 handshake complete, spawning background dispatcher task
+[2m2025-12-06T17:37:18.145417Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::client[0m[2m:[0m waiting for connection to be ready
+[2m2025-12-06T17:37:18.145648Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::client[0m[2m:[0m connection is ready
+[2m2025-12-06T17:37:18.145801Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m checkout dropped for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:18.379325Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:18.398122Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:18.398470Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:19.028182Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT c.category, c.enhanced_query, v.distance …" [3mdb.statement[0m[2m=[0m"\n\n\n            SELECT c.category, c.enhanced_query, v.distance\n            FROM vec_router_cache v\n            JOIN router_cache c ON v.rowid = c.id\n            WHERE v.embedding MATCH ? AND k = 1\n            ORDER BY v.distance ASC\n            \n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m629.552004ms [3melapsed_secs[0m[2m=[0m0.629552004
+[2m2025-12-06T17:37:19.029618Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:19.029890Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:22.732254Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:37:24.652067Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:24.653217Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:24.653669Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+DEBUG LLM RAW: ```json
+{
+  "category": "OSINT",
+  "enhanced_query": "Identify the codename for the secret project."
+}
+```
+[2m2025-12-06T17:37:24.691365Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO router_cache (query_text, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO router_cache (query_text, category, enhanced_query) VALUES (?, ?, ?) RETURNING id\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m36.296426ms [3melapsed_secs[0m[2m=[0m0.036296426
+[2m2025-12-06T17:37:24.705863Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO vec_router_cache (rowid, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO vec_router_cache (rowid, embedding) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m13.727931ms [3melapsed_secs[0m[2m=[0m0.013727931
+🧠 Routing query 'What is the secret project codename?' to AgentCategory("osint") (Optimized: 'Identify the codename for the secret project.')
+[2m2025-12-06T17:37:24.724544Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:24.724708Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:25.015652Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:25.017093Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:25.017344Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:25.620789Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT d.content, v.distance FROM …" [3mdb.statement[0m[2m=[0m"\n\n\n            SELECT d.content, v.distance\n            FROM vec_items v\n            JOIN documents d ON v.rowid = d.id\n            WHERE v.embedding MATCH ? AND k = ?\n            ORDER BY v.distance\n            \n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m603.278015ms [3melapsed_secs[0m[2m=[0m0.603278015
+📚 RAG: Found 1 relevant documents.
+[2m2025-12-06T17:37:25.621507Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:25.621803Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:27.736642Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:37:32.740182Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:37:34.691120Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:34.692090Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:34.692622Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:34.747751Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO messages (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m48.555179ms [3melapsed_secs[0m[2m=[0m0.048555179
+[2m2025-12-06T17:37:34.752113Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:34.824179Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518667904), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:34.824712Z[0m [35mTRACE[0m [2maxum::serve[0m[2m:[0m connection 127.0.0.1:40276 accepted
+[2m2025-12-06T17:37:34.828292Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:34.828597Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:35.080155Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:35.081757Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:35.082048Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:35.089413Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO documents (content) …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO documents (content) VALUES (?) RETURNING id\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m7.206819ms [3melapsed_secs[0m[2m=[0m0.007206819
+[2m2025-12-06T17:37:35.095111Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO vec_items (rowid, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO vec_items (rowid, embedding) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m5.350686ms [3melapsed_secs[0m[2m=[0m0.005350686
+[2m2025-12-06T17:37:35.110274Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:35.175815Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518786048), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:35.176054Z[0m [35mTRACE[0m [2maxum::serve[0m[2m:[0m connection 127.0.0.1:40284 accepted
+[2m2025-12-06T17:37:35.228606Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO sessions (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO sessions (id, title) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m49.987368ms [3melapsed_secs[0m[2m=[0m0.049987368
+[2m2025-12-06T17:37:35.248807Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO messages (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m19.289693ms [3melapsed_secs[0m[2m=[0m0.019289693
+[2m2025-12-06T17:37:35.249487Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:35.249885Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:35.468104Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:35.470380Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:35.470817Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:36.159792Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT c.category, c.enhanced_query, v.distance …" [3mdb.statement[0m[2m=[0m"\n\n\n            SELECT c.category, c.enhanced_query, v.distance\n            FROM vec_router_cache v\n            JOIN router_cache c ON v.rowid = c.id\n            WHERE v.embedding MATCH ? AND k = 1\n            ORDER BY v.distance ASC\n            \n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m689.025273ms [3melapsed_secs[0m[2m=[0m0.689025273
+[2m2025-12-06T17:37:36.160786Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:36.161159Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:36.927255Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:36.931797Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+DEBUG LLM RAW: ```json
+{
+  "category": "SYSTEM",
+  "enhanced_query": "How do I fix error 500?"
+}
+```
+[2m2025-12-06T17:37:36.932166Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:36.968467Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO router_cache (query_text, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO router_cache (query_text, category, enhanced_query) VALUES (?, ?, ?) RETURNING id\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m35.568648ms [3melapsed_secs[0m[2m=[0m0.035568648
+[2m2025-12-06T17:37:36.978356Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO vec_router_cache (rowid, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO vec_router_cache (rowid, embedding) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m9.323674ms [3melapsed_secs[0m[2m=[0m0.009323674
+🧠 Routing query 'How do I fix error 500?' to AgentCategory("system") (Optimized: 'How do I fix error 500?')
+[2m2025-12-06T17:37:36.989751Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:36.990025Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:37.203587Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:37.209638Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:37.210083Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:37.743498Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:37:37.828965Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT d.content, v.distance FROM …" [3mdb.statement[0m[2m=[0m"\n\n\n            SELECT d.content, v.distance\n            FROM vec_items v\n            JOIN documents d ON v.rowid = d.id\n            WHERE v.embedding MATCH ? AND k = ?\n            ORDER BY v.distance\n            \n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m2 [3melapsed[0m[2m=[0m618.860067ms [3melapsed_secs[0m[2m=[0m0.618860067
+📚 RAG: Found 2 relevant documents.
+[2m2025-12-06T17:37:37.830074Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:37.830309Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:38.871905Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:38.873007Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:38.873479Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:38.924285Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO messages (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m50.914472ms [3melapsed_secs[0m[2m=[0m0.050914472
+[2m2025-12-06T17:37:38.928060Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:39.003262Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530518713600), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:39.003749Z[0m [35mTRACE[0m [2maxum::serve[0m[2m:[0m connection 127.0.0.1:33382 accepted
+[2m2025-12-06T17:37:39.007576Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:39.007893Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:39.262243Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:39.269824Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:39.270311Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:39.310141Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO documents (content) …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO documents (content) VALUES (?) RETURNING id\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m39.541323ms [3melapsed_secs[0m[2m=[0m0.039541323
+[2m2025-12-06T17:37:39.319121Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO vec_items (rowid, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO vec_items (rowid, embedding) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m7.879439ms [3melapsed_secs[0m[2m=[0m0.007879439
+[2m2025-12-06T17:37:39.333996Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller
+[2m2025-12-06T17:37:39.397962Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m registering event source with poller: token=Token(103530517956096), interests=READABLE | WRITABLE
+[2m2025-12-06T17:37:39.398522Z[0m [35mTRACE[0m [2maxum::serve[0m[2m:[0m connection 127.0.0.1:33392 accepted
+[2m2025-12-06T17:37:39.450864Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO sessions (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO sessions (id, title) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m48.612177ms [3melapsed_secs[0m[2m=[0m0.048612177
+[2m2025-12-06T17:37:39.468355Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO messages (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m17.089704ms [3melapsed_secs[0m[2m=[0m0.017089704
+[2m2025-12-06T17:37:39.469279Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:39.469623Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:39.671233Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:39.677224Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:39.677589Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:40.311017Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT c.category, c.enhanced_query, v.distance …" [3mdb.statement[0m[2m=[0m"\n\n\n            SELECT c.category, c.enhanced_query, v.distance\n            FROM vec_router_cache v\n            JOIN router_cache c ON v.rowid = c.id\n            WHERE v.embedding MATCH ? AND k = 1\n            ORDER BY v.distance ASC\n            \n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m633.276794ms [3melapsed_secs[0m[2m=[0m0.633276794
+[2m2025-12-06T17:37:40.311655Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:40.311966Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:44.760691Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:44.762171Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:44.762414Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+DEBUG LLM RAW: ```json
+{
+  "category": "RED",
+  "enhanced_query": "Inquiry about a critical system launch code, potentially related to unauthorized access or control."
+}
+```
+[2m2025-12-06T17:37:44.801285Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO router_cache (query_text, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO router_cache (query_text, category, enhanced_query) VALUES (?, ?, ?) RETURNING id\n" [3mrows_affected[0m[2m=[0m0 [3mrows_returned[0m[2m=[0m1 [3melapsed[0m[2m=[0m37.958362ms [3melapsed_secs[0m[2m=[0m0.037958362
+[2m2025-12-06T17:37:44.815114Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO vec_router_cache (rowid, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO vec_router_cache (rowid, embedding) VALUES (?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m12.958398ms [3melapsed_secs[0m[2m=[0m0.012958398
+🧠 Routing query 'What is the launch code?' to AgentCategory("red") (Optimized: 'Inquiry about a critical system launch code, potentially related to unauthorized access or control.')
+[2m2025-12-06T17:37:44.825992Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:44.826350Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:45.040386Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:37:45.042510Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:45.042846Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:45.136945Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:37:45.666358Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"SELECT d.content, v.distance FROM …" [3mdb.statement[0m[2m=[0m"\n\n\n            SELECT d.content, v.distance\n            FROM vec_items v\n            JOIN documents d ON v.rowid = d.id\n            WHERE v.embedding MATCH ? AND k = ?\n            ORDER BY v.distance\n            \n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m3 [3melapsed[0m[2m=[0m623.493991ms [3melapsed_secs[0m[2m=[0m0.623493991
+📚 RAG: Found 3 relevant documents.
+[2m2025-12-06T17:37:45.667223Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m take? ("https", generativelanguage.googleapis.com): expiration = Some(90s)
+[2m2025-12-06T17:37:45.667452Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m reuse idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:37:50.139531Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:37:55.142992Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:38:00.146111Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:38:05.148464Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:38:10.151095Z[0m [32m INFO[0m [2msensei_server[0m[2m:[0m DEBUG: Watcher checking mcp_settings.json...
+[2m2025-12-06T17:38:10.646264Z[0m [35mTRACE[0m [2mreqwest::retry[0m[2m:[0m shouldn't retry!
+[2m2025-12-06T17:38:10.647384Z[0m [35mTRACE[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m put; add idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:38:10.648004Z[0m [34mDEBUG[0m [2mhyper_util::client::legacy::pool[0m[2m:[0m pooling idle connection for ("https", generativelanguage.googleapis.com)
+[2m2025-12-06T17:38:10.697977Z[0m [34mDEBUG[0m [2msqlx::query[0m[2m:[0m [3msummary[0m[2m=[0m"INSERT INTO messages (id, …" [3mdb.statement[0m[2m=[0m"\n\nINSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)\n" [3mrows_affected[0m[2m=[0m1 [3mrows_returned[0m[2m=[0m0 [3melapsed[0m[2m=[0m50.101146ms [3melapsed_secs[0m[2m=[0m0.050101146
+[2m2025-12-06T17:38:10.701468Z[0m [35mTRACE[0m [2mmio::poll[0m[2m:[0m deregistering event source from poller

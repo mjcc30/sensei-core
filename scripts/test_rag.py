@@ -21,14 +21,14 @@ def test_scenario(name, doc_content, question, expected_keywords, unexpected_key
     try:
         # Ingest
         print(f"  📄 Ingesting knowledge...")
-        res_add = run_cmd([CLIENT_BIN, "add", filename])
+        res_add = run_cmd([CLIENT_BIN, "--url", "http://0.0.0.0:3000", "add", filename])
         if res_add.returncode != 0:
             print(f"  ❌ Ingestion Failed: {res_add.stderr}")
             return False
 
         # Query
         print(f"  ❓ Asking: '{question}'")
-        res_ask = run_cmd([CLIENT_BIN, "ask", question])
+        res_ask = run_cmd([CLIENT_BIN, "--url", "http://0.0.0.0:3000", "ask", question])
         answer = res_ask.stdout.strip()
         
         # Parse output to get just the AI response (skip "Sending request...")
@@ -64,15 +64,16 @@ def run_suite():
     print("🧪 Starting RAG Test Suite...\n")
     
     # Clean DB
-    db_file = "sensei.db" # Default used by .env if not overridden
-    # Try to find which DB is used. Assuming standard sensei.db from .env or default.
-    # For safety, we rely on the server creating it if missing. 
-    # But to test ingestion we need a fresh start or distinct docs.
-    # Let's just run with whatever is there, RAG should find relevance.
+    db_file = "sensei.db" 
 
     server_log = open("server.log", "w")
-    server = subprocess.Popen([SERVER_BIN], stdout=server_log, stderr=server_log)
-    time.sleep(2) 
+    
+    # Force TCP
+    env = os.environ.copy()
+    env["SENSEI_LISTEN_ADDR"] = "0.0.0.0:3000"
+    
+    server = subprocess.Popen([SERVER_BIN], stdout=server_log, stderr=server_log, env=env)
+    time.sleep(5) 
 
     success_count = 0
     total = 0
@@ -109,6 +110,12 @@ def run_suite():
         server.terminate()
         server.wait()
         server_log.close()
+        
+        if success_count < total:
+            print("\n--- SERVER LOGS ---")
+            with open("server.log", "r") as f:
+                print(f.read())
+            print("-------------------")
 
     print(f"\n🏁 Result: {success_count}/{total} Passed")
     return success_count == total
