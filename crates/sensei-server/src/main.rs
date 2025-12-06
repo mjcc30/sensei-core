@@ -144,7 +144,9 @@ async fn main() -> anyhow::Result<()> {
     orchestrator.register(Box::new(system_agent));
 
     // 4.5 Init MCP Agents (Dynamic)
+    let mut dynamic_extensions = Vec::new();
     let mcp_path = env::var("SENSEI_MCP_CONFIG").unwrap_or("mcp_settings.json".to_string());
+
     if let Ok(mcp_config) = sensei_lib::config::load_mcp_settings(&mcp_path) {
         info!("🔌 Loading MCP Servers from {}", mcp_path);
         for (name, conf) in mcp_config.mcp_servers {
@@ -155,7 +157,6 @@ async fn main() -> anyhow::Result<()> {
             match sensei_lib::mcp_client::McpClient::new(&conf.command, &args_str, envs).await {
                 Ok(client) => {
                     let client_arc = Arc::new(client);
-                    // Use fast LLM for tool decision to keep it snappy
                     match sensei_lib::agents::mcp_agent::McpAgent::new(
                         client_arc,
                         fast_llm.clone(),
@@ -166,13 +167,7 @@ async fn main() -> anyhow::Result<()> {
                         Ok(agent) => {
                             info!("   ✅ MCP Agent '{}' registered", name);
                             orchestrator.register(Box::new(agent));
-                            // Add to dynamic categories list
-                            // We need to store this somewhere to update router prompt?
-                            // Since we are inside main, we can just append to a local list before creating Router.
-                            // But `active_categories` is defined above.
-                            // Wait, `orchestrator.register` moves the agent. We need to store the NAME.
-                            // I can't push to active_categories because strings must be 'static or owned?
-                            // active_categories is Vec<&str>. I need Vec<String> to support dynamic names.
+                            dynamic_extensions.push(name.to_uppercase());
                         }
                         Err(e) => warn!("   ❌ Failed to init MCP Agent '{}': {}", name, e),
                     }
@@ -183,33 +178,33 @@ async fn main() -> anyhow::Result<()> {
     }
 
     // 5. Init Router -> Fast LLM
-    // Construct dynamic prompt
-    // Ideally we would list all keys from orchestrator, but we don't have access.
-    // So we rely on standard categories + what we loaded from MCP.
-
-    // Quick hack: Just append generic instruction if MCPs are present
-    // Or better: pass the list of extra categories to Router?
-    // Let's assume the router is smart enough if we just tell it: "You also have access to extensions defined by name."
-
-    let base_router_prompt = get_prompt(
+    let mut router_prompt = get_prompt(
         "router",
         r#"
         You are a Query Optimizer.
-        Classify user input into: RED, BLUE, OSINT, CLOUD, CRYPTO, SYSTEM, ACTION, CASUAL, NOVICE.
+        STANDARD CATEGORIES: RED, BLUE, OSINT, CLOUD, CRYPTO, SYSTEM, ACTION, CASUAL, NOVICE.
+        ACTIVE EXTENSIONS: {EXTENSIONS}
+        Classify user input into one of the above categories.
         Output strictly JSON format: {"category": "CategoryName", "enhanced_query": "Query"}
         "#,
     );
 
-    // We haven't stored the dynamic names in a list we can use here easily without refactoring the loop above.
-    // For this iteration, let's keep the router static and rely on "ACTION" being the catch-all for tools,
-    // OR we rely on the user asking specifically for "filesystem" and the Router classifying it as "EXTENSION".
-    // Wait, the Router LLM needs to output "EXTENSION(name)" or "NAME".
-    // If I want the router to output "FILESYSTEM", I must tell it that "FILESYSTEM" is a valid category.
+    let extensions_str = if dynamic_extensions.is_empty() {
+        "NONE".to_string()
+    } else {
+        dynamic_extensions.join(", ")
+    };
+
+    router_prompt = router_prompt.replace("{EXTENSIONS}", &extensions_str);
+    info!(
+        "🧠 Router Prompt Configured with Extensions: {}",
+        extensions_str
+    );
 
     let router = Arc::new(RouterAgent::new(
         fast_llm.clone(),
         Some(memory.clone()),
-        &base_router_prompt,
+        &router_prompt,
     ));
 
     // 6. Build State
@@ -235,7 +230,6 @@ async fn main() -> anyhow::Result<()> {
             let listener =
                 tokio::net::UnixListener::bind(path).context("Failed to bind to Unix socket")?;
 
-            // Set permissions to 700 (Owner only) for security
             use std::os::unix::fs::PermissionsExt;
             std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))?;
 
