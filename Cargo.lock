@@ -2254,13 +2254,18 @@ dependencies = [
  "anyhow",
  "clap",
  "crossterm 0.29.0",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
  "ratatui",
  "reqwest",
  "sensei-common",
  "serde",
  "serde_json",
  "tokio",
+ "tower",
  "tui-textarea",
+ "url",
 ]
 
 [[package]]
@@ -2269,21 +2274,18 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
-name = "sensei-server"
+name = "sensei-lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-recursion",
  "async-trait",
- "axum",
  "chrono",
- "dotenvy",
  "genai",
- "http-body-util",
- "hyper",
  "libsqlite3-sys",
  "regex",
  "reqwest",
@@ -2294,11 +2296,45 @@ dependencies = [
  "sqlite-vec",
  "sqlx",
  "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "sensei-mcp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
+ "sensei-common",
+ "sensei-lib",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
+name = "sensei-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "dotenvy",
+ "http-body-util",
+ "hyper",
+ "sensei-common",
+ "sensei-lib",
+ "serde",
+ "serde_json",
+ "tempfile",
  "tokio",
  "tower",
  "tracing",
  "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]

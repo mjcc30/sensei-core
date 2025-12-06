@@ -1,4 +1,4 @@
-use anyhow::Result;
+use crate::errors::SenseiError;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::File;
@@ -14,7 +14,7 @@ pub struct AgentConfig {
     pub prompt: String,
 }
 
-pub fn load_prompts(path: &str) -> Result<PromptsConfig> {
+pub fn load_prompts(path: &str) -> Result<PromptsConfig, SenseiError> {
     let mut file = File::open(path)?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;

@@ -1,5 +1,5 @@
+use crate::errors::SenseiError;
 use crate::tools::Tool;
-use anyhow::{Result, bail};
 use async_trait::async_trait;
 use std::env;
 use std::process::Command;
@@ -12,7 +12,7 @@ impl Tool for NmapTool {
         "nmap"
     }
 
-    async fn execute(&self, target: &str) -> Result<String> {
+    async fn execute(&self, target: &str) -> Result<String, SenseiError> {
         // Basic input sanitization to prevent command injection
         if target.contains(';')
             || target.contains('&')
@@ -24,29 +24,23 @@ impl Tool for NmapTool {
             || target.contains('(')
             || target.contains(')')
         {
-            bail!(
-                "Invalid characters in target name. Please provide a valid hostname or IP address."
-            );
+            return Err(SenseiError::Tool(
+                "Invalid characters in target name. Please provide a valid hostname or IP address.".into()
+            ));
         }
 
         // Check if nmap is available in PATH or use provided path
-        let nmap_path = match env::var("SYSTEM_NMAPPATH") {
-            Ok(path) => path,
-            Err(_) => "nmap".to_string(), // Default to looking in PATH
-        };
+        let nmap_path = env::var("SYSTEM_NMAPPATH").unwrap_or("nmap".to_string());
 
-        // Execute nmap command
-        // Note: For CI/safety, this might need to be simulated or run in a container.
-        // For now, we assume nmap is available.
         let output = Command::new(nmap_path)
             .arg("-F") // Fast scan
             .arg(target)
             .output()
-            .map_err(|e| anyhow::anyhow!("Failed to execute nmap command: {}", e))?;
+            .map_err(|e| SenseiError::Tool(format!("Failed to execute nmap command: {}", e)))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            bail!("Nmap command failed: {}", stderr);
+            return Err(SenseiError::Tool(format!("Nmap command failed: {}", stderr)));
         }
 
         Ok(String::from_utf8_lossy(&output.stdout).to_string())

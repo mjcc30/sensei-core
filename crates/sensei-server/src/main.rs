@@ -1,12 +1,12 @@
 use anyhow::Context;
 use dotenvy::dotenv;
 use sensei_common::AgentCategory;
-use sensei_server::agents::{
+use sensei_lib::agents::{
     Orchestrator, action::ToolExecutorAgent, router::RouterAgent, specialists::SpecializedAgent,
 };
-use sensei_server::config::load_prompts;
-use sensei_server::llm::{LlmClient, MODEL_CHAT_FAST, MODEL_CHAT_SMART};
-use sensei_server::memory::MemoryStore;
+use sensei_lib::config::load_prompts;
+use sensei_lib::llm::{LlmClient, MODEL_CHAT_FAST, MODEL_CHAT_SMART};
+use sensei_lib::memory::MemoryStore;
 use sensei_server::{AppState, app};
 use std::env;
 use std::sync::Arc;
@@ -133,11 +133,11 @@ async fn main() -> anyhow::Result<()> {
 
     // Register Tool Agents (Action & System Tools)
     let mut action_agent = ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::Action);
-    action_agent.register_tool(Box::new(sensei_server::tools::nmap::NmapTool));
+    action_agent.register_tool(Box::new(sensei_lib::tools::nmap::NmapTool));
     orchestrator.register(Box::new(action_agent));
 
     let mut system_agent = ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::System);
-    system_agent.register_tool(Box::new(sensei_server::tools::system::SystemTool));
+    system_agent.register_tool(Box::new(sensei_lib::tools::system::SystemTool));
     orchestrator.register(Box::new(system_agent));
 
     // 5. Init Router -> Fast LLM
@@ -145,7 +145,7 @@ async fn main() -> anyhow::Result<()> {
         "router",
         r#"
         You are a Query Optimizer.
-        Classify user input into: Red, Blue, Osint, Cloud, Crypto, System, Action, Casual, Novice.
+        Classify user input into: RED, BLUE, OSINT, CLOUD, CRYPTO, SYSTEM, ACTION, CASUAL, NOVICE.
         Output strictly JSON format: {"category": "CategoryName", "enhanced_query": "Query"}
         "#,
     );
@@ -161,16 +161,46 @@ async fn main() -> anyhow::Result<()> {
 
     // 7. Start Server
     let app = app(state);
-    let addr = "0.0.0.0:3000";
-    let listener = TcpListener::bind(addr)
-        .await
-        .context(format!("Failed to bind to {}", addr))?;
+    
+    #[cfg(unix)]
+    let default_addr = "unix:///tmp/sensei.sock".to_string();
+    #[cfg(not(unix))]
+    let default_addr = "0.0.0.0:3000".to_string();
 
-    info!("🚀 Sensei Server running on http://{} (Swarm Mode)", addr);
-    info!("⚡ Fast Model: {}", MODEL_CHAT_FAST);
-    info!("🧠 Smart Model: {}", MODEL_CHAT_SMART);
+    let listen_target = env::var("SENSEI_LISTEN_ADDR").unwrap_or(default_addr);
 
-    axum::serve(listener, app).await.context("Server crashed")?;
+    if listen_target.starts_with("unix://") {
+        #[cfg(unix)]
+        {
+            let path = listen_target.trim_start_matches("unix://");
+            if std::fs::metadata(path).is_ok() {
+                std::fs::remove_file(path).context("Failed to remove existing socket file")?;
+            }
+            
+            let listener = tokio::net::UnixListener::bind(path).context("Failed to bind to Unix socket")?;
+            
+            // Set permissions to 700 (Owner only) for security
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))?;
+            
+            info!("🚀 Sensei Server listening on Unix Socket: {}", path);
+            axum::serve(listener, app).await.context("Server crashed")?;
+        }
+        #[cfg(not(unix))]
+        {
+            anyhow::bail!("Unix Domain Sockets are not supported on this OS");
+        }
+    } else {
+        let listener = TcpListener::bind(&listen_target)
+            .await
+            .context(format!("Failed to bind to {}", listen_target))?;
+
+        info!("🚀 Sensei Server running on http://{} (Swarm Mode)", listen_target);
+        info!("⚡ Fast Model: {}", MODEL_CHAT_FAST);
+        info!("🧠 Smart Model: {}", MODEL_CHAT_SMART);
+
+        axum::serve(listener, app).await.context("Server crashed")?;
+    }
 
     Ok(())
 }

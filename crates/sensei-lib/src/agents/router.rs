@@ -47,7 +47,8 @@ impl RouterAgent {
                 } else {
                     eprintln!(
                         "Failed to parse router JSON. Raw: '{}', Candidate: '{}'",
-                        json_str, candidate
+                        json_str,
+                        candidate
                     );
                     RoutingDecision {
                         category: AgentCategory::Unknown,

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use crate::errors::SenseiError;
 use chrono::NaiveDateTime;
 use libsqlite3_sys::sqlite3_auto_extension;
 use serde::{Deserialize, Serialize};
@@ -28,13 +28,8 @@ pub struct MemoryStore {
 }
 
 impl MemoryStore {
-    pub async fn new(database_url: &str) -> Result<Self> {
+    pub async fn new(database_url: &str) -> Result<Self, SenseiError> {
         // Register sqlite-vec extension globally for all new connections.
-        // SAFETY:
-        // 1. `sqlite3_vec_init` is a valid FFI function pointer provided by the `sqlite-vec` crate.
-        // 2. `sqlite3_auto_extension` expects a generic function pointer (`void (*)(void)`).
-        // 3. `transmute` is used to cast the specific signature of `sqlite3_vec_init` to the generic one expected by `libsqlite3-sys`.
-        // This operation is safe as long as the function pointer is valid, which is guaranteed by the crate.
         unsafe {
             #[allow(clippy::missing_transmute_annotations)]
             sqlite3_auto_extension(Some(std::mem::transmute(sqlite3_vec_init as *const ())));
@@ -48,14 +43,14 @@ impl MemoryStore {
         &self.pool
     }
 
-    pub async fn migrate(&self) -> Result<()> {
+    pub async fn migrate(&self) -> Result<(), SenseiError> {
         sqlx::migrate!("./migrations").run(&self.pool).await?;
         Ok(())
     }
 
     // --- Sessions ---
 
-    pub async fn create_session(&self, title: Option<&str>) -> Result<String> {
+    pub async fn create_session(&self, title: Option<&str>) -> Result<String, SenseiError> {
         let id = Uuid::new_v4().to_string();
         sqlx::query!("INSERT INTO sessions (id, title) VALUES (?, ?)", id, title)
             .execute(&self.pool)
@@ -63,7 +58,7 @@ impl MemoryStore {
         Ok(id)
     }
 
-    pub async fn list_sessions(&self) -> Result<Vec<Session>> {
+    pub async fn list_sessions(&self) -> Result<Vec<Session>, SenseiError> {
         let sessions = sqlx::query_as!(
             Session,
             r#"SELECT id, title, created_at as "created_at: NaiveDateTime" FROM sessions ORDER BY updated_at DESC"#
@@ -73,7 +68,7 @@ impl MemoryStore {
         Ok(sessions)
     }
 
-    pub async fn get_session(&self, id: &str) -> Result<Session> {
+    pub async fn get_session(&self, id: &str) -> Result<Session, SenseiError> {
         let session = sqlx::query_as!(
             Session,
             r#"SELECT id, title, created_at as "created_at: NaiveDateTime" FROM sessions WHERE id = ?"#,
@@ -84,7 +79,7 @@ impl MemoryStore {
         Ok(session)
     }
 
-    pub async fn update_session_title(&self, id: &str, title: &str) -> Result<()> {
+    pub async fn update_session_title(&self, id: &str, title: &str) -> Result<(), SenseiError> {
         sqlx::query!(
             "UPDATE sessions SET title = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
             title,
@@ -95,7 +90,7 @@ impl MemoryStore {
         Ok(())
     }
 
-    pub async fn delete_session(&self, id: &str) -> Result<()> {
+    pub async fn delete_session(&self, id: &str) -> Result<(), SenseiError> {
         sqlx::query!("DELETE FROM sessions WHERE id = ?", id)
             .execute(&self.pool)
             .await?;
@@ -104,7 +99,7 @@ impl MemoryStore {
 
     // --- Messages ---
 
-    pub async fn add_message(&self, session_id: &str, role: &str, content: &str) -> Result<String> {
+    pub async fn add_message(&self, session_id: &str, role: &str, content: &str) -> Result<String, SenseiError> {
         let id = Uuid::new_v4().to_string();
         sqlx::query!(
             "INSERT INTO messages (id, session_id, role, content) VALUES (?, ?, ?, ?)",
@@ -118,7 +113,7 @@ impl MemoryStore {
         Ok(id)
     }
 
-    pub async fn get_messages(&self, session_id: &str) -> Result<Vec<Message>> {
+    pub async fn get_messages(&self, session_id: &str) -> Result<Vec<Message>, SenseiError> {
         let messages = sqlx::query_as!(
             Message,
             r#"SELECT id, session_id, role, content, created_at as "created_at: NaiveDateTime" FROM messages WHERE session_id = ? ORDER BY created_at ASC"#,
@@ -131,13 +126,8 @@ impl MemoryStore {
 
     // --- RAG / Vectors ---
 
-    pub async fn add_document(&self, content: &str, embedding: Vec<f32>) -> Result<()> {
+    pub async fn add_document(&self, content: &str, embedding: Vec<f32>) -> Result<(), SenseiError> {
         let mut tx = self.pool.begin().await?;
-
-        // 1. Insert content
-        // Use query_scalar! for standard table, but handle Option return (though fetch_one should return T)
-        // fetch_one returns Result<T, Error>. query_scalar returns Record which might be mapped.
-        // Let's use sqlx::query to be safe and consistent with vector part.
 
         use sqlx::Row;
         let row = sqlx::query("INSERT INTO documents (content) VALUES (?) RETURNING id")
@@ -147,8 +137,6 @@ impl MemoryStore {
 
         let id: i64 = row.get("id");
 
-        // 2. Insert vector (using rowid = id)
-        // Use sqlx::query (not macro) because vec0 extension is not loaded in cargo check
         let vector_bytes = f32_vec_to_bytes(&embedding);
         sqlx::query("INSERT INTO vec_items (rowid, embedding) VALUES (?, ?)")
             .bind(id)
@@ -164,11 +152,9 @@ impl MemoryStore {
         &self,
         query_embedding: Vec<f32>,
         limit: i64,
-    ) -> Result<Vec<String>> {
+    ) -> Result<Vec<String>, SenseiError> {
         let vector_bytes = f32_vec_to_bytes(&query_embedding);
 
-        // Join vec_items with documents
-        // Use sqlx::query (not macro)
         let rows = sqlx::query(
             r#"
             SELECT d.content, v.distance
@@ -186,6 +172,30 @@ impl MemoryStore {
         use sqlx::Row;
         let results: Vec<String> = rows.iter().map(|row| row.get("content")).collect();
         Ok(results)
+    }
+
+    // MCP Support methods
+    pub async fn list_documents(&self) -> Result<Vec<(i64, String)>, SenseiError> {
+        use sqlx::Row;
+        let rows = sqlx::query("SELECT id, substr(content, 1, 50) as snippet FROM documents ORDER BY created_at DESC LIMIT 50")
+            .fetch_all(&self.pool)
+            .await?;
+
+        let results: Vec<(i64, String)> = rows.iter().map(|row| (
+            row.get("id"),
+            row.get::<String, _>("snippet")
+        )).collect();
+        Ok(results)
+    }
+
+    pub async fn get_document(&self, id: i64) -> Result<String, SenseiError> {
+        use sqlx::Row;
+        let row = sqlx::query("SELECT content FROM documents WHERE id = ?")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await?;
+        
+        Ok(row.get("content"))
     }
 }
 

@@ -3,5 +3,7 @@ members = [
     "crates/sensei-server",
     "crates/sensei-client",
     "crates/sensei-common",
+    "crates/sensei-lib",
+    "crates/sensei-mcp",
 ]
 resolver = "2"

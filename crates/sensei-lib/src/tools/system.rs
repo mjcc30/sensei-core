@@ -1,5 +1,5 @@
+use crate::errors::SenseiError;
 use crate::tools::Tool;
-use anyhow::{Result, bail};
 use async_trait::async_trait;
 use std::process::Command;
 
@@ -11,7 +11,7 @@ impl Tool for SystemTool {
         "system_diagnostic"
     }
 
-    async fn execute(&self, command_key: &str) -> Result<String> {
+    async fn execute(&self, command_key: &str) -> Result<String, SenseiError> {
         // Strict allowlist of diagnostic commands
         let (cmd, args) = match command_key.trim() {
             "uptime" => ("uptime", vec![]),
@@ -19,20 +19,20 @@ impl Tool for SystemTool {
             "memory" => ("free", vec!["-h"]),
             "whoami" => ("whoami", vec![]),
             "date" => ("date", vec![]),
-            _ => bail!(
+            _ => return Err(SenseiError::Tool(format!(
                 "Unknown or disallowed diagnostic command: '{}'. Allowed: uptime, disk, memory, whoami, date",
                 command_key
-            ),
+            ))),
         };
 
         let output = Command::new(cmd)
             .args(args)
             .output()
-            .map_err(|e| anyhow::anyhow!("Failed to run system command '{}': {}", cmd, e))?;
+            .map_err(|e| SenseiError::Tool(format!("Failed to run system command '{}': {}", cmd, e)))?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            bail!("Command '{}' failed: {}", cmd, stderr);
+            return Err(SenseiError::Tool(format!("Command '{}' failed: {}", cmd, stderr)));
         }
 
         // Truncate huge outputs to protect LLM context

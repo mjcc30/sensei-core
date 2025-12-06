@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use crate::errors::SenseiError;
 use async_trait::async_trait;
 use genai::Client;
 use genai::chat::{ChatMessage, ChatRequest};
@@ -8,9 +8,9 @@ use std::env;
 
 #[async_trait]
 pub trait Llm: Send + Sync {
-    async fn generate(&self, prompt: &str) -> Result<String>;
-    async fn embed(&self, text: &str) -> Result<Vec<f32>>;
-    async fn generate_raw(&self, prompt: &str) -> Result<String> {
+    async fn generate(&self, prompt: &str) -> Result<String, SenseiError>;
+    async fn embed(&self, text: &str) -> Result<Vec<f32>, SenseiError>;
+    async fn generate_raw(&self, prompt: &str) -> Result<String, SenseiError> {
         self.generate(prompt).await
     }
 }
@@ -54,19 +54,23 @@ impl LlmClient {
 
 #[async_trait]
 impl Llm for LlmClient {
-    async fn embed(&self, text: &str) -> Result<Vec<f32>> {
+    async fn embed(&self, text: &str) -> Result<Vec<f32>, SenseiError> {
         let req = EmbedRequest::new(text.to_string());
-        let response = self.client.exec_embed(MODEL_EMBEDDING, req, None).await?;
+        let response = self.client.exec_embed(MODEL_EMBEDDING, req, None).await
+            .map_err(|e| SenseiError::Llm(e.to_string()))?;
 
         if let Some(embedding) = response.embeddings.first() {
             Ok(embedding.vector.clone())
         } else {
-            bail!("No embedding generated")
+            Err(SenseiError::Llm("No embedding generated".to_string()))
         }
     }
 
-    async fn generate_raw(&self, prompt: &str) -> Result<String> {
-        let api_key = env::var("GEMINI_API_KEY")?;
+    async fn generate_raw(&self, prompt: &str) -> Result<String, SenseiError> {
+        let api_key = env::var("GEMINI_API_KEY").map_err(|e| SenseiError::Config(serde_yaml::Error::custom(e.to_string())))?;
+        // Need to wrap env error or change Config error type. Using generic Llm error for now.
+        // Actually map_err(|_| SenseiError::Llm("GEMINI_API_KEY not set".into()))
+        
         // Resolve model name if "auto"
         let model_name = if self.model_config == "auto" {
             MODEL_CHAT_DEFAULT
@@ -92,22 +96,25 @@ impl Llm for LlmClient {
         });
 
         let client = reqwest::Client::new();
-        let res = client.post(&url).json(&body).send().await?;
+        let res = client.post(&url).json(&body).send().await
+            .map_err(|e| SenseiError::Llm(e.to_string()))?;
 
         if !res.status().is_success() {
-            let error_text = res.text().await?;
-            bail!("Gemini REST Error: {}", error_text);
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(SenseiError::Llm(format!("Gemini REST Error: {}", error_text)));
         }
 
-        let json: Value = res.json().await?;
+        let json: Value = res.json().await
+            .map_err(|e| SenseiError::Llm(e.to_string()))?;
+            
         if let Some(text) = json.pointer("/candidates/0/content/parts/0/text") {
             Ok(text.as_str().unwrap_or("").to_string())
         } else {
-            bail!("No content generated (Blocked?): {:?}", json)
+            Err(SenseiError::Llm(format!("No content generated (Blocked?): {:?}", json)))
         }
     }
 
-    async fn generate(&self, prompt: &str) -> Result<String> {
+    async fn generate(&self, prompt: &str) -> Result<String, SenseiError> {
         let chat_req = ChatRequest::new(vec![ChatMessage::user(prompt)]);
 
         let models: Vec<&str> = if self.model_config == "auto" {
@@ -141,6 +148,9 @@ impl Llm for LlmClient {
             }
         }
 
-        bail!("All Gemini models failed. Last error: {:?}", last_error)
+        Err(SenseiError::Llm(format!("All Gemini models failed. Last error: {:?}", last_error)))
     }
 }
+
+// Helper to fix serde_yaml import error in generate_raw
+use serde::de::Error as SerdeError;

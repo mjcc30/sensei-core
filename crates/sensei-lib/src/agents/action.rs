@@ -36,8 +36,8 @@ impl ToolExecutorAgent {
         let tools_list = self.tools.keys().cloned().collect::<Vec<_>>().join(", ");
 
         let prompt = format!(
-            r#"            You are an autonomous Action Agent.
-            Available Tools: [{}]
+            r###"            You are an autonomous Action Agent.
+            Available Tools: [{}] 
             Task: Analyze the user request and decide which tool to execute.
             User Request: "{}"
             Rules:
@@ -47,7 +47,7 @@ impl ToolExecutorAgent {
             - If NO tool matches or arguments are ambiguous, return JSON: {{'tool_name': 'none', 'argument': 'reason'}}
 
             Output strictly JSON.
-            "#,
+            "###,
             tools_list, query
         );
 
@@ -95,5 +95,79 @@ impl Agent for ToolExecutorAgent {
 
     fn category(&self) -> AgentCategory {
         self.category
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::errors::SenseiError;
+    use std::sync::Mutex;
+
+    struct MockTool {
+        name: String,
+        was_called: Arc<Mutex<bool>>,
+    }
+
+    #[async_trait]
+    impl Tool for MockTool {
+        fn name(&self) -> &str {
+            &self.name
+        }
+        async fn execute(&self, _args: &str) -> Result<String, SenseiError> {
+            *self.was_called.lock().unwrap() = true;
+            Ok("Success".to_string())
+        }
+    }
+
+    struct MockLlm {
+        response: String,
+    }
+
+    #[async_trait]
+    impl Llm for MockLlm {
+        async fn generate(&self, _prompt: &str) -> Result<String, SenseiError> {
+            Ok(self.response.clone())
+        }
+        async fn embed(&self, _text: &str) -> Result<Vec<f32>, SenseiError> {
+            Ok(vec![])
+        }
+        async fn generate_raw(&self, prompt: &str) -> Result<String, SenseiError> {
+            self.generate(prompt).await
+        }
+    }
+
+    #[tokio::test]
+    async fn tool_agent_executes_correct_tool() {
+        let tool_called = Arc::new(Mutex::new(false));
+        
+        // Mock LLM response to force tool selection
+        let llm = Arc::new(MockLlm {
+            response: r###"{"tool_name": "mock_tool", "argument": "run"}"###.to_string(),
+        });
+
+        let mut agent = ToolExecutorAgent::new(llm, AgentCategory::Action);
+        
+        agent.register_tool(Box::new(MockTool {
+            name: "mock_tool".to_string(),
+            was_called: tool_called.clone(),
+        }));
+
+        let response = agent.process("Run mock tool").await;
+
+        assert!(*tool_called.lock().unwrap(), "Tool should have been executed");
+        assert!(response.contains("Success"));
+    }
+
+    #[tokio::test]
+    async fn tool_agent_handles_unknown_tool() {
+        let llm = Arc::new(MockLlm {
+            response: r###"{"tool_name": "ghost_tool", "argument": "run"}"###.to_string(),
+        });
+
+        let agent = ToolExecutorAgent::new(llm, AgentCategory::Action);
+        let response = agent.process("Run ghost tool").await;
+
+        assert!(response.contains("not found in registry"));
     }
 }

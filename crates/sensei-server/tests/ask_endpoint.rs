@@ -2,9 +2,9 @@ use axum::{
     body::Body,
     http::{Request, StatusCode, header},
 };
-use sensei_server::agents::{Orchestrator, router::RouterAgent};
-use sensei_server::llm::LlmClient;
-use sensei_server::memory::MemoryStore;
+use sensei_lib::agents::{Orchestrator, router::RouterAgent};
+use sensei_lib::llm::LlmClient;
+use sensei_lib::memory::MemoryStore;
 use sensei_server::{AppState, app};
 use serde_json::{Value, json};
 use std::sync::Arc;

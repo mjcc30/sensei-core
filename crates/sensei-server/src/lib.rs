@@ -1,21 +1,13 @@
-pub mod agents;
-pub mod config;
-pub mod llm;
-pub mod memory;
-pub mod tools;
-
-use crate::agents::Orchestrator;
-use crate::agents::router::RouterAgent;
-use crate::llm::Llm;
-use crate::memory::MemoryStore;
-use axum::{
-    Json, Router,
-    extract::State,
-    http::{HeaderMap, StatusCode},
-    response::IntoResponse,
-    routing::{get, post},
-};
+use axum::extract::State;
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::IntoResponse;
+use axum::routing::{get, post};
+use axum::{Json, Router};
 use sensei_common::{AskRequest, AskResponse, Health};
+use sensei_lib::agents::Orchestrator;
+use sensei_lib::agents::router::RouterAgent;
+use sensei_lib::llm::Llm;
+use sensei_lib::memory::MemoryStore;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::sync::Arc;
