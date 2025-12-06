@@ -17,7 +17,7 @@ use tracing::{error, info};
 struct JsonRpcRequest {
     // Prefix with _ to indicate intentional unused field (parsed but ignored logic-wise)
     _jsonrpc: String,
-    id: Option<Value>, 
+    id: Option<Value>,
     method: String,
     params: Option<Value>,
 }
@@ -67,7 +67,7 @@ impl McpServer {
     async fn new(db_url: &str) -> anyhow::Result<Self> {
         let memory = MemoryStore::new(db_url).await?;
         // Run migration to ensure DB schema is ready
-        memory.migrate().await?; 
+        memory.migrate().await?;
 
         let mut tools: HashMap<String, Box<dyn Tool>> = HashMap::new();
         
