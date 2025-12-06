@@ -13,7 +13,6 @@ use ratatui::crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{prelude::*, widgets::*};
-use reqwest::Client;
 use tui_textarea::TextArea;
 
 // Internal event bus
@@ -30,7 +29,7 @@ enum ActiveArea {
     Chat,
 }
 
-pub async fn run_tui(client: Client, base_url: String) -> anyhow::Result<()> {
+pub async fn run_tui(base_url: String) -> anyhow::Result<()> {
     // 1. Setup Terminal with Mouse Support
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -296,12 +295,12 @@ pub async fn run_tui(client: Client, base_url: String) -> anyhow::Result<()> {
 
                                 is_loading = true;
                                 auto_scroll = true; // Snap to bottom on send
-                                let client = client.clone();
                                 let base_url = base_url.clone();
                                 let tx = tx.clone();
 
                                 tokio::spawn(async move {
-                                    let res = crate::ask_api(&client, &base_url, &input).await;
+                                    // Use our new UDS-capable sender
+                                    let res = crate::send_ask_request(&base_url, &input).await;
                                     let msg = match res {
                                         Ok(content) => content,
                                         Err(e) => format!("Error: {}", e),
