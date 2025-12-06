@@ -52,6 +52,15 @@ async fn main() -> anyhow::Result<()> {
 
     // 2. Init LLM Clients
     let _api_key = env::var("GEMINI_API_KEY").context("GEMINI_API_KEY must be set")?;
+
+    // Support standard OLLAMA_URL env var
+    if let Ok(url) = env::var("OLLAMA_URL") {
+        // SAFETY: Safe because called at startup before threads
+        unsafe {
+            env::set_var("OLLAMA_API_BASE_URL", url);
+        }
+    }
+
     let ollama_model = env::var("OLLAMA_MODEL").ok();
 
     if let Some(ref m) = ollama_model {
@@ -92,7 +101,6 @@ async fn main() -> anyhow::Result<()> {
 
     // 4. Init Swarm
     let orchestrator = Orchestrator::new();
-    // No more hardcoded active categories list needed here, router prompt handles it
 
     // Specialists -> Smart LLM
     orchestrator
@@ -173,19 +181,6 @@ async fn main() -> anyhow::Result<()> {
     action_agent.register_tool(Box::new(sensei_lib::tools::nmap::NmapTool));
     orchestrator.register(Box::new(action_agent)).await;
 
-    // System Tool is also registered under "system" category, overriding or complementing the specialist?
-    // In previous code, it was separate. Let's check logic.
-    // Ah, ToolExecutorAgent replaces the specialist if same category.
-    // Wait, in previous code:
-    // register(SpecializedAgent("system"))
-    // register(ToolExecutorAgent("system")) -> Overwrites!
-    // The "System" agent was actually a ToolExecutor in the final version?
-    // Let's check previous main.rs content.
-    // It registered SpecializedAgent("system") AND ToolExecutorAgent("system").
-    // HashMap overwrites. So "System" was ONLY a ToolExecutor.
-    // To have both (chat + tools), we need separate categories or a HybridAgent.
-    // For now, let's keep ToolExecutor for "system" as it's more useful.
-
     let mut system_tool_agent =
         ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::new("system"));
     system_tool_agent.register_tool(Box::new(sensei_lib::tools::system::SystemTool));
@@ -232,7 +227,11 @@ async fn main() -> anyhow::Result<()> {
         You are a Query Optimizer.
         STANDARD CATEGORIES: RED, BLUE, OSINT, CLOUD, CRYPTO, SYSTEM, ACTION, CASUAL, NOVICE.
         ACTIVE EXTENSIONS: {EXTENSIONS}
+        RULES:
+        1. If the user asks to EXECUTE a specific tool or command (e.g. "scan IP", "check uptime"), classify as ACTION (or SYSTEM).
+        2. If the user asks for EXPLANATIONS or PLANS, classify as RED/BLUE/etc.
         Classify user input into one of the above categories.
+        If the input requires an extension tool, output the extension name (e.g. FILESYSTEM) as the category.
         Output strictly JSON format: {"category": "CategoryName", "enhanced_query": "Query"}
         "#,
     );
@@ -307,7 +306,7 @@ async fn main() -> anyhow::Result<()> {
                     for name in to_remove {
                         info!("   🗑️ Removing agent '{}'", name);
                         orchestrator_clone
-                            .unregister(&AgentCategory::new(&name)) // Use new()
+                            .unregister(&AgentCategory::new(&name))
                             .await;
                         current_known_servers.remove(&name);
                     }
