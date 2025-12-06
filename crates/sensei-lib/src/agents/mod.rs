@@ -78,7 +78,7 @@ impl Orchestrator {
 
         // Optimized Protocol v2: [DELEGATE: CATEGORY] Payload
         static RE: OnceLock<Regex> = OnceLock::new();
-        let re = RE.get_or_init(|| Regex::new(r"(?m)^[DELEGATE:\s*(\w+)]\s*(?s)(.*)$").unwrap());
+        let re = RE.get_or_init(|| Regex::new(r"(?m)^\[DELEGATE:\s*(\w+)\]\s*(?s)(.*)$").unwrap());
 
         if let Some(caps) = re.captures(&response) {
             let target_cat_str = caps.get(1).map_or("", |m| m.as_str());
