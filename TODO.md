@@ -4,37 +4,36 @@
 **Goal:** Rewrite Python engine in Rust, achieve feature parity, and enable Swarm Intelligence.
 
 - [x] **Project Scaffolding:** Cargo workspace, Axum server, Tokio runtime.
-- [x] **LLM Engine:**
-    - [x] Client with `reqwest` / `genai`.
-    - [x] Multi-Model Support (Flash for Router/Tools, Pro for Specialists).
-    - [x] **God Mode:** `generate_raw` implementation to bypass safety filters (via `--raw`).
-- [x] **Agents & Routing:**
-    - [x] Router Agent (Intent Classification).
-    - [x] Specialist Agents (Red, Blue, Cloud, etc.) with `prompts.yaml`.
-    - [x] Action Agent (`ToolExecutor`) for Nmap/System commands.
-    - [x] **A2A Loop:** ReAct pattern implemented in Orchestrator.
-- [x] **RAG (Memory):**
-    - [x] SQLite persistence (Sessions, Messages).
-    - [x] Vector Store (`sqlite-vec` with 3072 dims).
-    - [x] Ingestion CLI (`sensei add`).
-- [x] **Release & Integration:**
-    - [x] GitHub CI/CD (Release workflow, artifacts).
-    - [x] **Blackfin OS Integration:** `recipe.yml`, Wrapper script, Systemd service.
+- [x] **LLM Engine:** Multi-Model Support (Flash/Pro) & God Mode (`--raw`).
+- [x] **Agents & Routing:** Router, Specialists, Action/System Agents, ReAct Loop.
+- [x] **RAG (Memory):** SQLite persistence & Vector Store (`sqlite-vec`).
+- [x] **Release & Integration:** GitHub CI/CD & Blackfin OS Integration.
+
+## ✅ Phase 3.5: Architecture & Security Hardening (Completed)
+**Goal:** Modularize codebase and secure local transport.
+
+- [x] **Modular Architecture:** Extracted core logic to `crates/sensei-lib` (Clean Architecture).
+- [x] **Secure Transport (UDS):** Implemented Unix Domain Sockets (`unix:///tmp/sensei.sock`) for local client-server communication with `chmod 700`.
+- [x] **Error Handling:** Migrated to `thiserror` for structured, robust error management in libraries.
+- [x] **Testing:** Refactored unit and integration tests to match modular structure.
+
+## ✅ Phase 4: MCP Integration (Completed)
+**Goal:** Connect Sensei to the AI Ecosystem.
+
+- [x] **MCP Server:** Created `crates/sensei-mcp` (Stdio transport).
+- [x] **Tools Exposure:** Expose `nmap` and `system_diagnostic` as MCP Tools.
+- [x] **Resources Exposure:** Expose RAG documents as MCP Resources (`sensei://knowledge/{id}`).
 
 ---
 
-## 🚧 Phase 4: Interfaces & Ecosystem (Current Focus)
-**Goal:** Enhance user experience and interoperability.
+## 🚧 Phase 4.5: TUI & UX (Current Focus)
+**Goal:** Deliver a "Cyberpunk" terminal experience.
 
 - [ ] **TUI (Terminal User Interface):**
-    - [ ] Replace simple CLI print with `ratatui` interface.
+    - [ ] Replace simple CLI print with full `ratatui` interface.
     - [ ] Features: Streaming output, Markdown rendering, Input history, Status panels.
     - [ ] "Cyberpunk/Hacker" aesthetic matching Blackfin theme.
-- [ ] **MCP Server (Model Context Protocol):**
-    - [ ] Create `crates/sensei-mcp`.
-    - [ ] Expose Sensei's Memory (RAG) as MCP Resources.
-    - [ ] Expose Sensei's Tools (Nmap, System) as MCP Tools.
-    - [ ] Integration test with Claude Desktop or Cursor.
+    - [ ] Integrate UDS transport into TUI mode logic.
 
 ---
 
@@ -44,14 +43,12 @@
     - [ ] **Agent Clearance:** Assign security clearance levels to each Agent.
     - [ ] **Enforcement:** Modify `MemoryStore::search` to enforce "No Read Up".
 - [ ] **User Authentication:**
-    - [ ] Switch transport to Unix Domain Sockets (UDS) with `chmod 700`.
-    - [ ] Implement `SO_PEERCRED` verification (Owner only).
-    - [ ] Add API Key/Token authentication for remote clients.
+    - [ ] Implement `SO_PEERCRED` verification on UDS (Owner only) for extra safety.
+    - [ ] Add API Key/Token authentication for remote (HTTP) clients.
 - [ ] **Dynamic Swarm:**
-    - [ ] Allow defining new agents in `prompts.yaml` without recompiling (String-based categories).
+    - [ ] Allow defining new agents in `prompts.yaml` without recompiling.
 
 ---
 
 ## 🔧 Maintenance & Tech Debt
 - [ ] **Embedding Migration:** Migrate from `text-embedding-004` to `gemini-embedding-001` before Jan 2026.
-- [ ] **Router Optimization:** Tune `RouterAgent` prompt to improve classification accuracy (aim for >90% on bench). Address confusion between ACTION/SYSTEM and NOVICE/BLUE.
