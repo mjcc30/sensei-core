@@ -3,7 +3,7 @@ use axum::{
     http::{Request, StatusCode, header},
 };
 use sensei_lib::agents::{Orchestrator, router::RouterAgent};
-use sensei_lib::llm::LlmClient;
+use sensei_lib::llm::GeminiClient;
 use sensei_lib::memory::MemoryStore;
 use sensei_server::{AppState, app};
 use serde_json::json;
@@ -16,7 +16,7 @@ async fn bdd_memory_flow() {
     let memory = MemoryStore::new("sqlite::memory:").await.unwrap();
     memory.migrate().await.unwrap();
 
-    let llm = Arc::new(LlmClient::new("dummy".to_string()));
+    let llm = Arc::new(GeminiClient::new("dummy"));
     let orchestrator = Arc::new(Orchestrator::new());
     let router = Arc::new(RouterAgent::new(llm.clone(), None, "Dummy Prompt"));
 

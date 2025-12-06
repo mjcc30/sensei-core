@@ -5,7 +5,9 @@ use sensei_lib::agents::{
     Orchestrator, action::ToolExecutorAgent, router::RouterAgent, specialists::SpecializedAgent,
 };
 use sensei_lib::config::load_prompts;
-use sensei_lib::llm::{LlmClient, MODEL_CHAT_FAST, MODEL_CHAT_SMART};
+use sensei_lib::llm::{
+    GeminiClient, Llm, MODEL_CHAT_FAST, MODEL_CHAT_SMART, OllamaClient, TieredLlmClient,
+};
 use sensei_lib::memory::MemoryStore;
 use sensei_server::{AppState, app};
 use std::env;
@@ -49,13 +51,31 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // 2. Init LLM Clients
-    let api_key = env::var("GEMINI_API_KEY").context("GEMINI_API_KEY must be set")?;
+    let _api_key = env::var("GEMINI_API_KEY").context("GEMINI_API_KEY must be set")?;
+    let ollama_model = env::var("OLLAMA_MODEL").ok();
+
+    if let Some(ref m) = ollama_model {
+        info!("🦙 Ollama fallback enabled with model: {}", m);
+    }
+
+    // Helper builder for Tiered Architecture
+    let build_llm = |model_gemini: &str| -> Arc<dyn Llm> {
+        let primary = Box::new(GeminiClient::new(model_gemini));
+
+        let secondary: Option<Box<dyn Llm>> = if let Some(ref m) = ollama_model {
+            Some(Box::new(OllamaClient::new(m)))
+        } else {
+            None
+        };
+
+        Arc::new(TieredLlmClient::new(primary, secondary))
+    };
 
     // ⚡ Fast Tier
-    let fast_llm = Arc::new(LlmClient::new_with_model(api_key.clone(), MODEL_CHAT_FAST));
+    let fast_llm = build_llm(MODEL_CHAT_FAST);
 
     // 🧠 Smart Tier
-    let smart_llm = Arc::new(LlmClient::new_with_model(api_key.clone(), MODEL_CHAT_SMART));
+    let smart_llm = build_llm(MODEL_CHAT_SMART);
 
     // 3. Init Memory
     let db_url = env::var("DATABASE_URL").unwrap_or("sqlite://sensei.db?mode=rwc".to_string());
