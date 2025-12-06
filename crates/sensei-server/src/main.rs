@@ -92,15 +92,13 @@ async fn main() -> anyhow::Result<()> {
 
     // 4. Init Swarm
     let orchestrator = Orchestrator::new();
-    let _active_categories = vec![
-        "RED", "BLUE", "CLOUD", "CRYPTO", "OSINT", "SYSTEM", "ACTION", "CASUAL", "NOVICE",
-    ];
+    // No more hardcoded active categories list needed here, router prompt handles it
 
     // Specialists -> Smart LLM
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             smart_llm.clone(),
-            AgentCategory::Red,
+            AgentCategory::new("red"),
             &get_prompt("red_team", "SYSTEM: You are a Red Team Operator."),
             Some(get_prompt("master", "SYSTEM: You are SENSEI.")),
         )))
@@ -109,7 +107,7 @@ async fn main() -> anyhow::Result<()> {
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             smart_llm.clone(),
-            AgentCategory::Blue,
+            AgentCategory::new("blue"),
             &get_prompt("blue_team", "SYSTEM: You are a Blue Team Analyst."),
             None,
         )))
@@ -118,7 +116,7 @@ async fn main() -> anyhow::Result<()> {
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             smart_llm.clone(),
-            AgentCategory::Cloud,
+            AgentCategory::new("cloud"),
             &get_prompt("cloud", "SYSTEM: You are a Cloud Security Architect."),
             None,
         )))
@@ -127,7 +125,7 @@ async fn main() -> anyhow::Result<()> {
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             smart_llm.clone(),
-            AgentCategory::Crypto,
+            AgentCategory::new("crypto"),
             &get_prompt("crypto", "SYSTEM: You are a Cryptographer."),
             None,
         )))
@@ -136,7 +134,7 @@ async fn main() -> anyhow::Result<()> {
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             smart_llm.clone(),
-            AgentCategory::Osint,
+            AgentCategory::new("osint"),
             &get_prompt("osint", "SYSTEM: You are an Intelligence Officer."),
             None,
         )))
@@ -145,7 +143,7 @@ async fn main() -> anyhow::Result<()> {
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             smart_llm.clone(),
-            AgentCategory::System,
+            AgentCategory::new("system"),
             &get_prompt("system", "SYSTEM: You are Root."),
             None,
         )))
@@ -155,7 +153,7 @@ async fn main() -> anyhow::Result<()> {
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             fast_llm.clone(),
-            AgentCategory::Casual,
+            AgentCategory::new("casual"),
             &get_prompt("casual", "SYSTEM: You are Sensei."),
             None,
         )))
@@ -164,20 +162,34 @@ async fn main() -> anyhow::Result<()> {
     orchestrator
         .register(Box::new(SpecializedAgent::new(
             fast_llm.clone(),
-            AgentCategory::Novice,
+            AgentCategory::new("novice"),
             &get_prompt("novice", "SYSTEM: You are a Teacher."),
             None,
         )))
         .await;
 
     // Register Tool Agents (Action & System Tools)
-    let mut action_agent = ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::Action);
+    let mut action_agent = ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::new("action"));
     action_agent.register_tool(Box::new(sensei_lib::tools::nmap::NmapTool));
     orchestrator.register(Box::new(action_agent)).await;
 
-    let mut system_agent = ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::System);
-    system_agent.register_tool(Box::new(sensei_lib::tools::system::SystemTool));
-    orchestrator.register(Box::new(system_agent)).await;
+    // System Tool is also registered under "system" category, overriding or complementing the specialist?
+    // In previous code, it was separate. Let's check logic.
+    // Ah, ToolExecutorAgent replaces the specialist if same category.
+    // Wait, in previous code:
+    // register(SpecializedAgent("system"))
+    // register(ToolExecutorAgent("system")) -> Overwrites!
+    // The "System" agent was actually a ToolExecutor in the final version?
+    // Let's check previous main.rs content.
+    // It registered SpecializedAgent("system") AND ToolExecutorAgent("system").
+    // HashMap overwrites. So "System" was ONLY a ToolExecutor.
+    // To have both (chat + tools), we need separate categories or a HybridAgent.
+    // For now, let's keep ToolExecutor for "system" as it's more useful.
+
+    let mut system_tool_agent =
+        ToolExecutorAgent::new(fast_llm.clone(), AgentCategory::new("system"));
+    system_tool_agent.register_tool(Box::new(sensei_lib::tools::system::SystemTool));
+    orchestrator.register(Box::new(system_tool_agent)).await;
 
     // 4.5 Init MCP Agents (Dynamic)
     let mut dynamic_extensions = Vec::new();
@@ -256,7 +268,6 @@ async fn main() -> anyhow::Result<()> {
     let mcp_path_clone = mcp_path.clone();
     let fast_llm_clone = fast_llm.clone();
 
-    // Initial state matching what we just loaded (Upper case names)
     let mut current_known_servers: std::collections::HashSet<String> =
         dynamic_extensions.iter().cloned().collect();
 
@@ -270,12 +281,10 @@ async fn main() -> anyhow::Result<()> {
             tokio::time::sleep(Duration::from_secs(5)).await;
             info!("DEBUG: Watcher checking {}...", mcp_path_clone);
 
-            // Check file modification time
             let current_mtime = std::fs::metadata(&mcp_path_clone)
                 .and_then(|m| m.modified())
                 .ok();
 
-            // If file exists and mtime changed (or appeared)
             if current_mtime.is_some() && current_mtime != last_mtime {
                 info!(
                     "🔄 Configuration change detected in {}. Reloading MCP Agents...",
@@ -298,7 +307,7 @@ async fn main() -> anyhow::Result<()> {
                     for name in to_remove {
                         info!("   🗑️ Removing agent '{}'", name);
                         orchestrator_clone
-                            .unregister(&AgentCategory::Extension(name.to_lowercase()))
+                            .unregister(&AgentCategory::new(&name)) // Use new()
                             .await;
                         current_known_servers.remove(&name);
                     }

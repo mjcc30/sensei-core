@@ -105,6 +105,6 @@ impl Agent for McpAgent {
     }
 
     fn category(&self) -> AgentCategory {
-        AgentCategory::Extension(self.server_name.clone().to_lowercase())
+        AgentCategory::new(&self.server_name)
     }
 }

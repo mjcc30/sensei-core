@@ -33,11 +33,13 @@ async fn router_learns_from_correction() -> Result<()> {
     // 2. Initial Classification (Should match LLM default = CASUAL)
     let query = "Analyze SSH logs for brute force";
     let decision1 = router.classify(query).await;
-    assert_eq!(decision1.category, AgentCategory::Casual);
+    assert_eq!(decision1.category, AgentCategory::new("casual"));
 
     // 3. Apply Correction (Teach it that this is BLUE TEAM work)
     println!("Applying correction...");
-    router.correct_decision(query, AgentCategory::Blue).await;
+    router
+        .correct_decision(query, AgentCategory::new("blue"))
+        .await;
 
     // 4. Verify Cache Update (Should now return BLUE without asking LLM)
     // Note: Since MockLlm returns same embedding, search should hit.
@@ -45,18 +47,20 @@ async fn router_learns_from_correction() -> Result<()> {
 
     assert_eq!(
         decision2.category,
-        AgentCategory::Blue,
+        AgentCategory::new("blue"),
         "Router did not learn from correction!"
     );
 
     // 5. Verify Update (Change mind to SYSTEM)
     println!("Applying update...");
-    router.correct_decision(query, AgentCategory::System).await;
+    router
+        .correct_decision(query, AgentCategory::new("system"))
+        .await;
 
     let decision3 = router.classify(query).await;
     assert_eq!(
         decision3.category,
-        AgentCategory::System,
+        AgentCategory::new("system"),
         "Router did not update existing cache!"
     );
 

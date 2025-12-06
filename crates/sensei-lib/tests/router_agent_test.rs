@@ -31,7 +31,7 @@ async fn router_classifies_correctly() {
 
     let decision = router.classify("hack").await;
 
-    assert_eq!(decision.category, AgentCategory::Red);
+    assert_eq!(decision.category, AgentCategory::new("red"));
     assert_eq!(decision.query, "Attack");
 }
 
@@ -44,6 +44,6 @@ async fn router_handles_json_errors() {
 
     let decision = router.classify("hack").await;
 
-    assert_eq!(decision.category, AgentCategory::Unknown);
+    assert_eq!(decision.category, AgentCategory::new("unknown"));
     assert_eq!(decision.query, "hack");
 }

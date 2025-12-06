@@ -104,7 +104,7 @@ impl RouterAgent {
                         json_str, candidate
                     );
                     RoutingDecision {
-                        category: AgentCategory::Unknown,
+                        category: AgentCategory::new("unknown"),
                         query: input.to_string(),
                     }
                 }
@@ -112,7 +112,7 @@ impl RouterAgent {
             Err(e) => {
                 eprintln!("Router LLM Error: {}", e);
                 RoutingDecision {
-                    category: AgentCategory::Unknown,
+                    category: AgentCategory::new("unknown"),
                     query: input.to_string(),
                 }
             }

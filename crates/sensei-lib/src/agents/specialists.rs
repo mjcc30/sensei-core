@@ -42,7 +42,7 @@ impl Agent for SpecializedAgent {
         let full_prompt = format!("{}\n\nUser Query: {}", sys_prompt, input);
 
         // Use raw generation (bypass filters) if --raw is requested AND allowed for this agent (Red)
-        let result = if is_raw_mode && self.category == AgentCategory::Red {
+        let result = if is_raw_mode && self.category == AgentCategory::new("red") {
             self.llm.generate_raw(&full_prompt).await
         } else {
             self.llm.generate(&full_prompt).await

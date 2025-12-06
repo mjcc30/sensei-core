@@ -63,11 +63,12 @@ impl Orchestrator {
                 agent.clone()
             } else {
                 // println!("DEBUG: Agent not found for {:?}. Fallback to Casual.", category);
-                if let Some(casual) = map.get(&AgentCategory::Casual) {
+                // Default fallback category is "casual"
+                if let Some(casual) = map.get(&AgentCategory::new("casual")) {
                     casual.clone()
                 } else {
                     return format!(
-                        "No agent found for category {:?} and Casual fallback missing",
+                        "No agent found for category {:?} and 'casual' fallback missing",
                         category
                     );
                 }
@@ -84,32 +85,20 @@ impl Orchestrator {
             let target_cat_str = caps.get(1).map_or("", |m| m.as_str());
             let target_query = caps.get(2).map_or("", |m| m.as_str()).trim();
 
-            let target_cat = match target_cat_str.to_uppercase().as_str() {
-                "ACTION" => Some(AgentCategory::Action),
-                "SYSTEM" => Some(AgentCategory::System),
-                "RED" => Some(AgentCategory::Red),
-                "BLUE" => Some(AgentCategory::Blue),
-                "CLOUD" => Some(AgentCategory::Cloud),
-                "CRYPTO" => Some(AgentCategory::Crypto),
-                "OSINT" => Some(AgentCategory::Osint),
-                "CASUAL" => Some(AgentCategory::Casual),
-                name => Some(AgentCategory::Extension(name.to_lowercase())),
-            };
+            // Dynamic Routing: Create category directly from string
+            let target_cat = AgentCategory::new(target_cat_str);
 
-            if let Some(cat) = target_cat {
-                let observation = self.dispatch_loop(cat, target_query, depth - 1).await;
+            let observation = self
+                .dispatch_loop(target_cat, target_query, depth - 1)
+                .await;
 
-                let new_input = format!(
-                    "{}\n\n[OBSERVATION from {}]\n{}",
-                    input, target_cat_str, observation
-                );
-                return self.dispatch_loop(category, &new_input, depth - 1).await;
-            } else {
-                return format!(
-                    "Error: Agent attempted to delegate to unknown category '{}'",
-                    target_cat_str
-                );
-            }
+            let new_input = format!(
+                "{}
+
+[OBSERVATION from {}]\n{}",
+                input, target_cat_str, observation
+            );
+            return self.dispatch_loop(category, &new_input, depth - 1).await;
         }
 
         response

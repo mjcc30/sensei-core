@@ -48,7 +48,7 @@ async fn tool_agent_executes_correct_tool() {
         response: r#"{"tool_name": "mock_tool", "argument": "run"}"#.to_string(),
     });
 
-    let mut agent = ToolExecutorAgent::new(llm, AgentCategory::Action);
+    let mut agent = ToolExecutorAgent::new(llm, AgentCategory::new("action"));
 
     agent.register_tool(Box::new(MockTool {
         name: "mock_tool".to_string(),
@@ -70,7 +70,7 @@ async fn tool_agent_handles_unknown_tool() {
         response: r#"{"tool_name": "ghost_tool", "argument": "run"}"#.to_string(),
     });
 
-    let agent = ToolExecutorAgent::new(llm, AgentCategory::Action);
+    let agent = ToolExecutorAgent::new(llm, AgentCategory::new("action"));
     let response = agent.process("Run ghost tool").await;
 
     assert!(response.contains("not found in registry"));

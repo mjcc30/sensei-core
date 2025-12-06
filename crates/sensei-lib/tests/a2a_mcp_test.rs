@@ -20,7 +20,7 @@ impl Agent for DelegatorAgent {
         "[DELEGATE: loopback] uptime".to_string()
     }
     fn category(&self) -> AgentCategory {
-        AgentCategory::Casual
+        AgentCategory::new("casual")
     }
 }
 
@@ -58,7 +58,7 @@ async fn test_a2a_loopback_delegation() -> Result<()> {
     // 3. Dispatch to CASUAL
     // It should delegate to LOOPBACK, which calls `system_diagnostic` -> `uptime`
     let response = orchestrator
-        .dispatch(AgentCategory::Casual, "Do the thing")
+        .dispatch(AgentCategory::new("casual"), "Do the thing")
         .await;
 
     println!("Orchestrator Final Response:\n{}", response);

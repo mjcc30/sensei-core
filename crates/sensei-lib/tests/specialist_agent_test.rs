@@ -29,7 +29,12 @@ async fn specialist_uses_system_prompt() {
     let llm = Arc::new(MockLlm {
         last_prompt: Mutex::new(String::new()),
     });
-    let agent = SpecializedAgent::new(llm.clone(), AgentCategory::Blue, "SYSTEM PROMPT", None);
+    let agent = SpecializedAgent::new(
+        llm.clone(),
+        AgentCategory::new("blue"),
+        "SYSTEM PROMPT",
+        None,
+    );
 
     agent.process("Query").await;
 
@@ -45,7 +50,7 @@ async fn specialist_uses_master_prompt_in_raw_mode() {
     });
     let agent = SpecializedAgent::new(
         llm.clone(),
-        AgentCategory::Red,
+        AgentCategory::new("red"),
         "SYSTEM PROMPT",
         Some("MASTER PROMPT".to_string()),
     );
