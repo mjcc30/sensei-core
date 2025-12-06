@@ -6,88 +6,60 @@
 
 ## 🌟 Revolutionary Features
 
-*   **🧠 96-Agent Swarm:** Scaling the architecture to support specialized agents across 24 categories (Red, Blue, Cloud, Quantum, etc.).
-*   **⚛️ Quantum Optimization:** Implementing a 20-qubit simulation (Simulated Annealing / Genetic Algorithms) for code optimization, targeting 15-25% improvement in generated solution efficiency.
-*   **🛡️ Byzantine Consensus:** Fault-tolerant validation where multiple agents (Proposer, Validator, Critic) must agree (95%+ consensus rate) before executing critical actions.
-*   **🚀 Multi-Mode Execution:**
-    *   **Local:** Native Rust Agent Swarm (Privacy-first).
-    *   **Remote:** Delegation to external VMs (Jules VM).
-    *   **Hybrid:** Orchestrated mix for optimal performance/cost.
-*   **📊 Quality Scoring:** Real-time evaluation of responses targeting 87% average quality with consensus validation.
+*   **🧠 96-Agent Swarm:** Scaling the architecture to support specialized agents across 24 categories.
+*   **⚛️ Quantum Optimization:** Implementing a 20-qubit simulation for code optimization.
+*   **🛡️ Byzantine Consensus:** Fault-tolerant validation (95%+ consensus rate).
+*   **🚀 Multi-Mode Execution:** Local (Rust), Remote (Jules), Hybrid.
+*   **📊 Quality Scoring:** Real-time evaluation.
 
 ---
 
 ## 🚀 1. Modern Protocol Support (COMPLETED)
-**Goal:** Native A2A (Agent-to-Agent) and MCP integration for seamless inter-agent communication and model coordination.
+**Goal:** Native A2A and MCP integration.
 
-The barrier between "Internal Rust Agent" and "External MCP Tool" must disappear.
-
-*   [x] **Unified Agent Interface:** Refactor `Orchestrator` to treat local Rust structs and remote MCP servers identically.
-*   [x] **The `McpAgent` Wrapper:** Create a generic Agent that wraps the `McpClient`.
-    *   *Capabilities:* Auto-discovery of tools via `tools/list`.
-    *   *Routing:* Inject MCP tool descriptions into the Router's system prompt dynamically.
-*   [x] **Recursive A2A Loop:** Ensure an MCP Agent can call back into the Orchestrator via `[DELEGATE: EXTENSION]`.
+*   [x] **Unified Agent Interface:** Rust & MCP treated identically.
+*   [x] **The `McpAgent` Wrapper:** Generic wrapper with auto-discovery.
+*   [x] **Recursive A2A Loop:** `[DELEGATE: EXTENSION]` implemented.
 
 ---
 
 ## ⚡ 2. Enterprise Performance (COMPLETED)
 **Goal:** 396,610 ops/sec with <75ms routing latency.
 
-Rust is fast, but default configs are safe, not fast. We need to unlock the engine.
-
-*   [x] **SQLite Hyper-Tuning (The "396k" Target):**
-    *   Enable `WAL` (Write-Ahead Logging) permanently.
-    *   Set `synchronous = NORMAL` (Safety/Speed balance).
-    *   Increase `mmap_size` (Memory Mapped I/O).
-    *   Use `SQLx` prepared statements with aggressive caching.
-    *   *Benchmark Result:* **12,624,115 ops/sec** (Target smashed).
-*   [x] **Semantic Caching (<75ms Routing):**
-    *   LLMs are slow (500ms+). To hit <75ms, we must skip the LLM.
-    *   Implement **Vector Cache**: If a user query matches a previous query (Cosine Similarity > 0.95), return the cached routing decision instantly.
-    *   Implement **RLHF Loop**: `/v1/feedback/correct` to teach the router.
+*   [x] **SQLite Hyper-Tuning:** 12M ops/sec achieved.
+*   [x] **Semantic Caching:** RLHF Loop implemented.
 
 ---
 
-## 🛡️ 3. Production Ready (NEXT)
+## 🔌 3. Advanced Protocol Features (NEXT)
+**Goal:** Match Gemini-CLI capabilities for robustness and extensibility.
+
+*   [ ] **Hot Reloading:** Watch `mcp_settings.json` and reload agents without restart (ExtensionLoader pattern).
+*   [ ] **Centralized Tool Registry:** Abstract tools from agents for better Function Calling and reduced duplication.
+*   [ ] **SSE Transport:** Support HTTP/SSE for connecting to remote MCP servers (not just local stdio).
+
+---
+
+## 🛡️ 4. Resilience & Sovereignty
 **Goal:** Byzantine fault tolerance and automatic failover.
 
-A production system must never crash and never trust a single point of failure.
-
-*   [ ] **Automatic Model Failover:**
-    *   Implement a `TieredProvider` in `LlmClient`.
-    *   Priority: `Gemini 1.5 Pro` -> `Gemini Flash` -> `Ollama/Local`.
-    *   If API 500s or hangs, transparently retry with the next provider.
-*   [ ] **Byzantine Fault Tolerance (Self-Correction):**
-    *   **The Consensus Protocol:** For high-stakes categories, instantiate 3 Agents (different prompts/temperatures).
-    *   **Voting Mechanism:** Compare outputs. If consensus < 66%, trigger a debate or reject.
-    *   **Target:** 95%+ consensus success.
-*   [ ] **Circuit Breaking:**
-    *   If an MCP server times out 3 times, disconnect it to prevent cascading failures.
-
----
-
-## 📊 4. Performance Metrics (KPIs)
-
-| Metric | Target | Current Status | Strategy |
-| :--- | :--- | :--- | :--- |
-| **Task Routing** | < 75ms | **< 5ms (Cache Hit)** | Semantic Caching & Regex Fast-Path |
-| **Concurrent Tasks** | 100+ | ✅ Supported (Tokio) | Async Rust (Tokio) & Actor Model |
-| **Code Accuracy** | 99%+ | 🚧 Pending | Quantum-inspired Optimization & Test-Driven Generation |
-| **DB Throughput** | ~400k ops/sec | **12.6M ops/sec** | SQLite WAL + Mmap + Batching |
-| **Consensus Rate** | 95%+ | 🚧 Pending | Multi-Agent Voting |
+*   [ ] **Automatic Model Failover:** Priority: `Gemini` -> `Ollama/Local`.
+*   [ ] **Byzantine Consensus:** Multi-agent voting system.
+*   [ ] **Circuit Breaking:** Disconnect failing MCP servers.
 
 ---
 
 ## 📅 Execution Phases
 
 1.  **Phase 1: Performance (DONE)**
-    *   Implement SQLite Tuning & Benchmarks.
-    *   Implement Semantic Router Cache.
-
 2.  **Phase 2: Protocol Unification (DONE)**
-    *   Implement `McpAgent` and dynamic orchestration.
-
-3.  **Phase 3: Resilience & Sovereignty (Current Priority)**
-    *   Implement Ollama Fallback.
-    *   Implement Byzantine Consensus.
-    *   Implement Quantum Optimization Simulation.
+3.  **Phase 3: Advanced Protocol Features (Current Priority)**
+    *   Hot Reloading (Watch `mcp_settings.json`).
+    *   Tool Registry.
+    *   SSE Transport.
+4.  **Phase 4: Resilience & Sovereignty**
+    *   Ollama Fallback.
+    *   Byzantine Consensus.
+...
+10. **Phase 10: Interface & UX**
+    *   Cyberpunk TUI (Ratatui).

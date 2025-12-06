@@ -16,38 +16,35 @@
 - [x] **Security:** Unix Domain Sockets (UDS) support.
 - [x] **Performance:** SQLite Hyper-Tuning (12M ops/sec).
 - [x] **Learning:** RLHF Loop (Semantic Router Cache correction).
-- [x] **Protocol Unification (MCP Client):**
-    - [x] `McpAgent` wrapper to treat MCP servers as native agents.
-    - [x] Dynamic Tool Discovery & Routing via `mcp_settings.json`.
+- [x] **Protocol Unification (MCP Client):** `McpAgent` wrapper and dynamic routing.
 - [x] **Advanced A2A Protocol:** `[DELEGATE: EXTENSION]` recursive loop implemented.
 
-## 🚧 Phase 4.5: TUI & UX (Next)
-**Goal:** Deliver a "Cyberpunk" terminal experience.
+## 🔌 Phase 5: Advanced Protocol Features (Next Focus)
+**Goal:** Match Gemini-CLI capabilities.
 
-- [ ] **TUI (Terminal User Interface):**
-    - [ ] Replace simple CLI print with full `ratatui` interface.
-    - [ ] Features: Streaming output, Markdown rendering, Input history, Status panels.
-    - [ ] "Cyberpunk/Hacker" aesthetic matching Blackfin theme.
-    - [ ] Integrate UDS transport into TUI mode logic.
+- [ ] **Hot Reloading:** Watch `mcp_settings.json` and reload agents without restart.
+- [ ] **Centralized Tool Registry:** Abstract tools from agents for better Function Calling.
+- [ ] **SSE Transport:** Support HTTP/SSE for remote MCP servers.
 
-## 🛡️ Phase 5: Resilience & Sovereignty
-**Goal:** Production-grade reliability and unrestricted local execution.
+## 🛡️ Phase 6: Resilience & Sovereignty
+**Goal:** Production-grade reliability.
 
 - [ ] **Local Intelligence (Ollama):** Fallback to local uncensored models (Llama 3, Mistral) for God Mode commands.
 - [ ] **Byzantine Consensus:** Multi-agent voting system.
-- [ ] **Advanced MCP Features:**
-    - [ ] **SSE Transport:** Support HTTP/SSE for remote MCP servers.
-    - [ ] **Centralized Tool Registry:** Abstract tools from agents for better Function Calling.
-    - [ ] **Hot Reloading:** Watch `mcp_settings.json` and reload agents without restart.
 - [ ] **Security Model:** MAC/ABAC implementation.
-    - [ ] Data Classification (Confidential/Secret tags).
-    - [ ] Agent Clearance levels.
-    - [ ] No Read Up enforcement in MemoryStore.
+    - [ ] **Data Classification:** Tag ingested documents with levels (Unclassified, Confidential, Secret, Top Secret).
+    - [ ] **Agent Clearance:** Assign security clearance levels to each Agent.
+    - [ ] **Enforcement:** Modify `MemoryStore::search` to enforce "No Read Up".
 - [ ] **User Authentication:**
     - [ ] Implement `SO_PEERCRED` verification on UDS (Owner only).
     - [ ] Add API Key/Token authentication for remote (HTTP) clients.
 - [ ] **Dynamic Swarm:**
     - [ ] Allow defining new agents in `prompts.yaml` without recompiling.
+
+## 🖥️ Phase 10: Interface & UX (Low Priority)
+**Goal:** Deliver a "Cyberpunk" terminal experience.
+
+- [ ] **TUI (Terminal User Interface):** Advanced `ratatui` interface.
 
 ## 🔧 Tech Debt
 - [ ] **Embedding Migration:** Migrate to `gemini-embedding-001`.

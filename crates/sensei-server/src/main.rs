@@ -238,7 +238,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Initial state matching what we just loaded (Upper case names)
     let mut current_known_servers: std::collections::HashSet<String> =
-        dynamic_extensions.iter().cloned().collect(); // dynamic_extensions is already Upper Case Strings
+        dynamic_extensions.iter().cloned().collect();
 
     tokio::spawn(async move {
         use std::time::Duration;
@@ -248,6 +248,7 @@ async fn main() -> anyhow::Result<()> {
 
         loop {
             tokio::time::sleep(Duration::from_secs(5)).await;
+            info!("DEBUG: Watcher checking {}...", mcp_path_clone);
 
             // Check file modification time
             let current_mtime = std::fs::metadata(&mcp_path_clone)
@@ -289,7 +290,7 @@ async fn main() -> anyhow::Result<()> {
                             info!("   ✨ Adding new agent '{}'", name);
 
                             let envs = conf.env;
-                            let args_str = conf.args; // Owned Vec<String>
+                            let args_str = conf.args;
                             let args_slice: Vec<&str> =
                                 args_str.iter().map(|s| s.as_str()).collect();
 
